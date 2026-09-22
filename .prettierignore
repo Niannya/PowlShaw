@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.next-stale-*/
+.pnpm-store/
+data/
+public/uploads/
+破晓相关/
+.env*
+*.xml
+*.zip
+*.tsbuildinfo
+pnpm-lock.yaml
+.playwright-cli/
+output/
+tmp/

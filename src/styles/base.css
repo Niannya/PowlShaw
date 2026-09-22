@@ -1,0 +1,58 @@
+:root {
+  --ink: #29231d;
+  --paper: #fffdf4;
+  --blue: #176bc1;
+  --line: #7991aa;
+  --sidebar: rgba(250, 249, 247, 0.91);
+  --control-border: #8799a8;
+  --control-paper: #fff9e7;
+  --control-hover: #fff0b3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--ink);
+  font-family: Georgia, "Noto Serif SC", "Songti SC", SimSun, serif;
+  font-size: 16px;
+  background-color: #f6f1df;
+  background-image:
+    linear-gradient(90deg, rgba(204, 74, 90, 0.08) 1px, transparent 1px),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 27px,
+      rgba(69, 125, 176, 0.14) 28px,
+      transparent 29px
+    ),
+    radial-gradient(circle at 8% 18%, rgba(245, 190, 57, 0.25) 0 70px, transparent 72px),
+    radial-gradient(circle at 93% 80%, rgba(225, 105, 142, 0.2) 0 90px, transparent 92px);
+  background-size:
+    100% 100%,
+    100% 29px,
+    100% 100%,
+    100% 100%;
+  background-attachment: fixed;
+}
+
+a {
+  color: #0645ad;
+  text-decoration: underline;
+}
+a:visited {
+  color: #5a258c;
+}
+a:hover {
+  color: #d22752;
+  background: #fff59d;
+}
+img {
+  max-width: 100%;
+}

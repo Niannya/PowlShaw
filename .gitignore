@@ -1,0 +1,44 @@
+# Dependencies and generated Next.js output
+node_modules/
+.next/
+.next-stale-*/
+.pnpm-store/
+*.tsbuildinfo
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Runtime databases, user uploads, backups, and import reports
+data/*
+!data/.gitkeep
+public/uploads/*
+!public/uploads/.gitkeep
+*.db
+*.db-*
+
+# Private source archives used by the local import scripts
+/破晓相关/
+/破晓相关.zip
+/网站残骸.xml
+
+# Tool caches and temporary output
+__pycache__/
+*.py[cod]
+.pytest_cache/
+coverage/
+.playwright-cli/
+output/
+tmp/
+*.log
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo

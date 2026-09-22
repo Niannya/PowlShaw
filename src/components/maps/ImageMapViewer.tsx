@@ -848,7 +848,6 @@ export function ImageMapViewer({
                 }
               />
             </label>
-            <small>关系线仅表示两个节点之间的抽象联系，不代表地理路线。</small>
             <div className="world-map-node-actions">
               <button type="submit" disabled={isSaving}>
                 {isSaving ? "保存中…" : "保存并公开"}
@@ -945,17 +944,15 @@ export function ImageMapViewer({
         ) : null}
       </div>
 
-      <p className="world-map-help">
-        {isPlacing
-          ? "添加模式：请点击地图确定新节点的位置。"
-          : relationMode?.sourceNodeId
-            ? `关系模式：已选择“${nodeName(relationMode.sourceNodeId)}”，请点击第二个节点。`
-            : relationMode
-              ? "关系模式：请依次点击两个节点。"
-              : currentUser?.canEdit
-                ? "点击节点或关系线查看信息；你创建的内容可以编辑。使用按钮缩放，放大后拖动空白处浏览。"
-                : "点击节点或关系线查看公开信息。使用按钮缩放，放大后拖动地图浏览。"}
-      </p>
+      {isPlacing || relationMode ? (
+        <p className="world-map-help">
+          {isPlacing
+            ? "添加模式：请点击地图确定新节点的位置。"
+            : relationMode?.sourceNodeId
+              ? `关系模式：已选择“${nodeName(relationMode.sourceNodeId)}”，请点击第二个节点。`
+              : "关系模式：请依次点击两个节点。"}
+        </p>
+      ) : null}
     </section>
   );
 }

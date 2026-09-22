@@ -71,7 +71,6 @@ export function AdminPasswordForm() {
           required
         />
       </label>
-      <p>密码至少 8 位。修改后，其他设备上已经登录的后台会话会失效。</p>
       {message ? <p className={isError ? "form-error" : "form-success"}>{message}</p> : null}
       <button className="admin-button" disabled={busy}>
         {busy ? "正在修改……" : "修改管理员密码"}

@@ -24,7 +24,6 @@ export function ArticlePreviewDialog({
       <div className="article-preview-window">
         <div className="article-preview-toolbar">
           <strong>发布前预览</strong>
-          <span>这是预览，不会自动保存或发布。</span>
           <button type="button" className="admin-button" onClick={onClose}>
             关闭预览
           </button>

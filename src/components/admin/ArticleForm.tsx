@@ -179,19 +179,8 @@ export function ArticleForm({
         <label>
           网址别名
           <input value={draft.slug} readOnly placeholder="保存时根据所属活动自动生成" />
-          <small>由系统按“活动网址 + 编号”生成；修改标题不会改变网址，更换活动时会重新编号。</small>
         </label>
         <div className="inline">
-          <label>
-            状态
-            <select
-              value={draft.status}
-              onChange={(event) => update("status", event.target.value as ArticleDraft["status"])}
-            >
-              <option value="draft">草稿</option>
-              <option value="published">已发布</option>
-            </select>
-          </label>
           <label>
             发布时间
             <input
@@ -265,13 +254,13 @@ export function ArticleForm({
             ))}
           </div>
         </fieldset>
-        <p className="auto-save-status">
-          {autoSaveError
-            ? "本机自动保存不可用，请及时手动保存。"
-            : lastAutoSave
-              ? `未提交内容已自动保存在这台电脑上：${new Date(lastAutoSave).toLocaleTimeString("zh-CN")}`
-              : "修改后会自动在这台电脑上保存临时草稿。"}
-        </p>
+        {autoSaveError || lastAutoSave ? (
+          <p className="auto-save-status">
+            {autoSaveError
+              ? "本机自动保存不可用，请及时手动保存。"
+              : `未提交内容已自动保存在这台电脑上：${new Date(lastAutoSave!).toLocaleTimeString("zh-CN")}`}
+          </p>
+        ) : null}
         <div className="admin-actions">
           <button className="admin-button" disabled={busy}>
             {busy ? "保存中……" : "保存文章"}

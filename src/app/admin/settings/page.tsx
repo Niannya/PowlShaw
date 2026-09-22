@@ -9,7 +9,6 @@ export default async function SiteSettingsPage() {
   return (
     <AdminShell>
       <h1>站点设置</h1>
-      <p>维护首页欢迎区和站内公告；保存后刷新首页即可看到结果。</p>
       <SiteSettingsForm initial={settings} />
     </AdminShell>
   );

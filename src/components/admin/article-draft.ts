@@ -5,7 +5,6 @@ export type ArticleInitial = {
   slug?: string;
   content_html?: string;
   content_markdown?: string;
-  status?: string;
   published_at?: string | null;
   cover_url?: string | null;
   is_pinned?: number;
@@ -18,7 +17,6 @@ export type ArticleDraft = {
   slug: string;
   content_html: string;
   content_markdown: string;
-  status: "draft" | "published";
   published_at: string;
   cover_url: string;
   is_pinned: boolean;
@@ -44,7 +42,6 @@ export function createArticleDraft(initial: ArticleInitial): ArticleDraft {
     slug: initial.slug || "",
     content_html: initial.content_html || "",
     content_markdown: initial.content_markdown || "",
-    status: initial.status === "published" ? "published" : "draft",
     published_at: initial.published_at ? initial.published_at.slice(0, 10) : today,
     cover_url: initial.cover_url || "",
     is_pinned: Boolean(initial.is_pinned),
@@ -68,7 +65,6 @@ export function isStoredArticleDraft(value: unknown): value is StoredArticleDraf
     typeof data.slug === "string" &&
     typeof data.content_html === "string" &&
     typeof data.content_markdown === "string" &&
-    (data.status === "draft" || data.status === "published") &&
     typeof data.published_at === "string" &&
     typeof data.cover_url === "string" &&
     typeof data.is_pinned === "boolean" &&

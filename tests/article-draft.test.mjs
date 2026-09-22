@@ -4,7 +4,7 @@ import { createArticleDraft, isStoredArticleDraft } from "../src/components/admi
 
 test("new articles get editable defaults", () => {
   const draft = createArticleDraft({});
-  assert.equal(draft.status, "draft");
+  assert.equal("status" in draft, false);
   assert.equal(draft.comments_mode, "open");
   assert.equal("category_ids" in draft, false);
   assert.match(draft.published_at, /^\d{4}-\d{2}-\d{2}$/);
@@ -13,11 +13,9 @@ test("new articles get editable defaults", () => {
 test("existing article dates are normalized to day precision", () => {
   const draft = createArticleDraft({
     title: "旧稿",
-    status: "published",
     published_at: "2025-06-10 08:30:00",
   });
   assert.equal(draft.title, "旧稿");
-  assert.equal(draft.status, "published");
   assert.equal(draft.published_at, "2025-06-10");
 });
 

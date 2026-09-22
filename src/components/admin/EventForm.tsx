@@ -111,9 +111,6 @@ export function EventForm({ initial = {} }: { initial?: Initial }) {
           </select>
         </label>
       </div>
-      <p className="settings-help">
-        这里只编辑活动档案本身。要把活动放到首页，请使用活动管理卡片右上角的选项。
-      </p>
       <label>
         横幅图片地址
         <input value={banner} onChange={(e) => setBanner(e.target.value)} />

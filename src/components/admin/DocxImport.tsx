@@ -55,7 +55,6 @@ export function DocxImport({
   return (
     <section className="docx-import-box">
       <strong>从 Word 导入</strong>
-      <p>支持最大 20MB 的 .docx；导入后仍需预览、检查并手动保存。</p>
       <input
         type="file"
         accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"

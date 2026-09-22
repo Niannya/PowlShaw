@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         textExcerpt(content, 180),
         content,
         markdown,
-        body.status === "published" ? "published" : "draft",
+        "published",
         publishedAt.value,
         coverUrl,
         body.is_pinned ? 1 : 0,

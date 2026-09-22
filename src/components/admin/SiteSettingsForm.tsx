@@ -50,9 +50,6 @@ export function SiteSettingsForm({ initial }: { initial: EditableSiteSettings })
     <form className="admin-form site-settings-form" onSubmit={submit}>
       <fieldset>
         <legend>首页欢迎区</legend>
-        <p className="settings-help">
-          这里的字段按首页从上到下排列；饼干、红茶和访问次数功能不受修改影响。
-        </p>
         <div className="settings-fields">
           <label>
             欢迎区标题

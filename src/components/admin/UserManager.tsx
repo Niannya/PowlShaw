@@ -163,7 +163,6 @@ export function UserManager({ users }: { users: UserRow[] }) {
     <>
       <section className="admin-card admin-user-create">
         <h2>创建评论账号</h2>
-        <p>网站没有公开注册入口。请在这里为受邀用户创建账号，并通过私下渠道告知密码。</p>
         <form className="admin-form" method="post" onSubmit={create}>
           {error ? <p className="form-error">{error}</p> : null}
           <label>

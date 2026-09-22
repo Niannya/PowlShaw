@@ -77,10 +77,7 @@ export function EventMapSettingsForm({
   return (
     <section className="admin-card event-map-settings">
       <div className="event-map-settings-heading">
-        <div>
-          <h2>列国纪专题设置</h2>
-          <p>维护世界地图和专题页固定标题；活动名称、简介、时间和正文仍在上方编辑。</p>
-        </div>
+        <h2>列国纪专题设置</h2>
         <div className="admin-actions">
           <Link className="admin-event-action-link" href={`/events/${eventSlug}`} target="_blank">
             查看专题页 ↗
@@ -154,7 +151,6 @@ export function EventMapSettingsForm({
               maxLength={300}
               onChange={(event) => update("image_alt", event.target.value)}
             />
-            <small>地图无法显示或使用读屏软件时会读出这段文字。</small>
           </label>
           <label>
             独立地图页标题

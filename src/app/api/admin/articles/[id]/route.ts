@@ -78,7 +78,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       textExcerpt(content, 180),
       content,
       markdown,
-      body.status === "published" ? "published" : "draft",
+      "published",
       publishedAt.value,
       coverUrl,
       body.is_pinned ? 1 : 0,

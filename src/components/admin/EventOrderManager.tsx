@@ -118,10 +118,7 @@ export function EventOrderManager({ initialRows }: { initialRows: AdminEventRow[
   return (
     <section className="admin-event-order-section">
       <div className="admin-event-order-heading">
-        <div>
-          <h2>活动专题预览与排序</h2>
-          <p>与前台一样分为“破晓”和“其他”；可在同组内拖动或选择任意位置，调整后自动保存。</p>
-        </div>
+        <h2>活动专题预览与排序</h2>
         <Link href="/events" target="_blank" rel="noopener noreferrer">
           打开活动专题 ↗
         </Link>

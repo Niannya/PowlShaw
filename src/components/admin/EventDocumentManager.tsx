@@ -134,10 +134,7 @@ export function EventDocumentManager({
   return (
     <section className="event-document-manager admin-card">
       <header className="event-document-manager-heading">
-        <div>
-          <h2>评议资料与附件</h2>
-          <p>上传评议表、统计表、晋级名单等非作品资料；保存后会公开显示在活动页面。</p>
-        </div>
+        <h2>评议资料与附件</h2>
       </header>
 
       <form className="event-document-upload" onSubmit={upload}>

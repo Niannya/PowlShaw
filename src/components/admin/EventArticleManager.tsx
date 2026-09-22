@@ -602,10 +602,7 @@ export function EventArticleManager({
   return (
     <section className="admin-card event-article-manager">
       <div className="event-article-manager-heading">
-        <div>
-          <h2>参与作品与分组</h2>
-          <p>分组按层级嵌套显示；直接拖动文章卡片即可换组和排序。</p>
-        </div>
+        <h2>参与作品与分组</h2>
         <Link className="admin-button" href={`/admin/articles/new?event=${eventId}`}>
           添加新文章
         </Link>
@@ -623,7 +620,6 @@ export function EventArticleManager({
         <button type="submit" className="admin-button">
           创建分组
         </button>
-        <small>子分组请在对应分组内点击“添加子分组”。</small>
       </form>
 
       <div className="event-section-board">

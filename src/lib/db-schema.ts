@@ -150,6 +150,21 @@ export function migrate(db: Database.Database) {
       CHECK (source_node_id <> target_node_id)
     );
 
+    -- 用户在地图上圈选的抽象区域。顶点同样使用 0—1 相对坐标，颜色只影响公开展示。
+    CREATE TABLE IF NOT EXISTS event_map_regions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      color TEXT NOT NULL DEFAULT '#b56d3a',
+      points_json TEXT NOT NULL,
+      deleted_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS pages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       legacy_id INTEGER UNIQUE,
@@ -322,6 +337,10 @@ export function migrate(db: Database.Database) {
       ON event_map_relations(user_id, deleted_at);
     CREATE INDEX IF NOT EXISTS idx_event_map_relations_nodes
       ON event_map_relations(source_node_id, target_node_id, deleted_at);
+    CREATE INDEX IF NOT EXISTS idx_event_map_regions_event
+      ON event_map_regions(event_id, deleted_at, created_at);
+    CREATE INDEX IF NOT EXISTS idx_event_map_regions_user
+      ON event_map_regions(user_id, deleted_at);
     CREATE INDEX IF NOT EXISTS idx_comments_article_status_date
       ON comments(article_id, status, created_at);
     CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);

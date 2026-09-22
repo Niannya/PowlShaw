@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ImageMapViewer } from "@/components/maps/ImageMapViewer";
 import { getEventMapSettingsBySlug } from "@/lib/event-map-settings";
 import { getEventMapNodes } from "@/lib/event-map-nodes";
+import { getEventMapRegions } from "@/lib/event-map-regions";
 import { getEventMapRelations } from "@/lib/event-map-relations";
 import { getEvent } from "@/lib/queries";
 import { getCurrentUser, userCanPublishContent } from "@/lib/user-auth";
@@ -27,6 +28,7 @@ export default async function EventMapPage({ params }: MapPageProps) {
   if (!event || !map?.is_enabled || !map.image_url) notFound();
 
   const nodes = getEventMapNodes(event.id);
+  const regions = getEventMapRegions(event.id);
   const relations = getEventMapRelations(event.id);
   const user = await getCurrentUser();
   const mapUser = user
@@ -61,6 +63,7 @@ export default async function EventMapPage({ params }: MapPageProps) {
           height={map.image_height}
           eventId={event.id}
           initialNodes={nodes}
+          initialRegions={regions}
           initialRelations={relations}
           currentUser={mapUser}
           loginPath={`/login?next=${encodeURIComponent(`/events/${event.slug}/map`)}`}

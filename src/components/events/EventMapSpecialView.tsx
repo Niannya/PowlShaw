@@ -6,6 +6,7 @@ import { cleanHtml, formatMonth } from "@/lib/content";
 import { eventGroupLabel } from "@/lib/event-groups";
 import type { EventMapSettings } from "@/lib/event-map-settings";
 import { getEventMapNodes } from "@/lib/event-map-nodes";
+import { getEventMapRegions } from "@/lib/event-map-regions";
 import { getEventMapRelations } from "@/lib/event-map-relations";
 import { eventStatus, getArticlesByEvent, getEventDocuments, type Event } from "@/lib/queries";
 import { getCurrentUser, userCanPublishContent } from "@/lib/user-auth";
@@ -17,6 +18,7 @@ export async function EventMapSpecialView({ event, map }: { event: Event; map: E
   const articles = getArticlesByEvent(event.id);
   const documents = getEventDocuments(event.id);
   const nodes = getEventMapNodes(event.id);
+  const regions = getEventMapRegions(event.id);
   const relations = getEventMapRelations(event.id);
   const user = await getCurrentUser();
   const mapUser = user
@@ -78,6 +80,7 @@ export async function EventMapSpecialView({ event, map }: { event: Event; map: E
               height={map.image_height}
               eventId={event.id}
               initialNodes={nodes}
+              initialRegions={regions}
               initialRelations={relations}
               currentUser={mapUser}
               loginPath={`/login?next=${encodeURIComponent(`/events/${event.slug}#world-map`)}`}

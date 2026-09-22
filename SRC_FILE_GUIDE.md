@@ -111,7 +111,18 @@
 | `src/app/api/admin/users/route.ts`           | `POST /api/admin/users`；由管理员创建受邀评论账号，保存密码哈希并要求首次登录改密。   |
 | `src/app/api/admin/users/[id]/route.ts`      | `PUT/DELETE /api/admin/users/编号`；修改备注、显示名、密码、状态和禁言，或删除账号。  |
 
-### 2.8 评论、点心与访问统计接口
+### 2.8 公开地图协作接口
+
+| 文件                                                               | 请求与作用                                                      |
+| ------------------------------------------------------------------ | --------------------------------------------------------------- |
+| `src/app/api/events/[eventId]/map/nodes/route.ts`                  | `GET/POST` 活动地图节点；公开读取，登录用户创建自己的节点。     |
+| `src/app/api/events/[eventId]/map/nodes/[nodeId]/route.ts`         | `PUT/DELETE` 自有节点；修改信息或位置，以及软删除。             |
+| `src/app/api/events/[eventId]/map/regions/route.ts`                | `GET/POST` 多边形区域；公开读取，登录用户圈选并创建自己的区域。 |
+| `src/app/api/events/[eventId]/map/regions/[regionId]/route.ts`     | `PUT/DELETE` 自有区域；修改信息、顶点和颜色，以及软删除。       |
+| `src/app/api/events/[eventId]/map/relations/route.ts`              | `GET/POST` 抽象节点关系；公开读取，登录用户创建关系。           |
+| `src/app/api/events/[eventId]/map/relations/[relationId]/route.ts` | `PUT/DELETE` 自有关系；修改连接节点和公开信息，以及软删除。     |
+
+### 2.9 评论、点心与访问统计接口
 
 | 文件                                 | 请求与作用                                                                                       |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------ |
@@ -138,7 +149,7 @@
 | `src/components/EventPanel.tsx`                 | 首页展示活动面板；显示活动状态、简介、月份和入口。                                     |
 | `src/components/EventDirectoryCard.tsx`         | 活动专题页及后台预览共用的活动卡片。                                                   |
 | `src/components/EventArticleDirectory.tsx`      | 把文章的 `section_path` 转成任意层级的树，在活动前台按分组嵌套展示。                   |
-| `src/components/maps/ImageMapViewer.tsx`        | 可缩放、拖动及复位的大图查看器；供专题页和独立地图页复用。                             |
+| `src/components/maps/ImageMapViewer.tsx`        | 地图查看及共创编辑器；处理缩放、节点、区域、关系和所有者操作。                         |
 | `src/components/events/EventMapSpecialView.tsx` | 地图型活动的专属专题模板；组合活动资料、地图、正文、附件和作品目录，并兼容活动改网址。 |
 
 ### 3.2 普通账号组件
@@ -208,35 +219,41 @@
 
 ## 5. `src/lib`：数据库、业务逻辑和安全工具
 
-| 文件                              | 作用                                                                                         |
-| --------------------------------- | -------------------------------------------------------------------------------------------- |
-| `src/lib/db.ts`                   | 打开并复用 SQLite 连接，设置 WAL/外键，按 `DATABASE_PATH` 或默认路径选择数据库，并执行迁移。 |
-| `src/lib/db-schema.ts`            | 创建全部数据表、索引、默认设置和向后兼容字段；保留旧作者/分类表但当前站点不提供对应功能。    |
-| `src/lib/queries.ts`              | 公开页面的集中查询层：文章、前后篇、活动、首页活动、评议资料、搜索、年份档案和分页。         |
-| `src/lib/admin.ts`                | 后台通用工具：JSON 错误、唯一别名、文章顺序编号、ID 数组、活动月份和文章日期校验。           |
-| `src/lib/audit.ts`                | 写入管理员操作记录和文章/活动 JSON 内容快照。                                                |
-| `src/lib/auth.ts`                 | 管理员认证：凭据初始化、HMAC 会话、Cookie、页面/API 权限检查及管理员改密。                   |
-| `src/lib/user-auth.ts`            | 受邀用户认证：scrypt 密码、HMAC 会话、Cookie、输入校验、账号读取和登录失败封禁。             |
-| `src/lib/request-security.ts`     | 请求安全工具：判断 HTTPS、对来源信息生成不可逆指纹，并在 SQLite 中实行固定窗口限流。         |
-| `src/lib/safe-path.ts`            | 只允许站内根相对路径，防止登录返回地址造成开放重定向。                                       |
-| `src/lib/client-fetch.ts`         | 浏览器端通用 JSON 请求包装，统一处理正常响应、非 JSON 响应和断网。                           |
-| `src/lib/content.ts`              | 清理 HTML、Markdown 转 HTML、生成摘要、生成网址别名以及格式化日期/月。                       |
-| `src/lib/content-limits.ts`       | 文章标题、摘要、HTML 和 Markdown 的统一大小上限。                                            |
-| `src/lib/uploaded-assets.ts`      | 登记后台上传图片、标记已被正文引用的图片，并回收超过一天仍未引用的临时文件。                 |
-| `src/lib/event-documents.ts`      | 评议资料的扩展名、文件名、大小和文件头校验，以及哈希存储路径和文件增删。                     |
-| `src/lib/event-map-settings.ts`   | 查询活动专题地图设置，并在旧数据库尚无记录时提供默认配置。                                   |
-| `src/lib/event-map-validation.ts` | 后台专题地图表单的纯数据校验：图片地址、尺寸、必填标题及文本长度。                           |
-| `src/lib/event-groups.ts`         | 定义活动类型“破晓 / 其他”、标签、配色和类型校验。                                            |
-| `src/lib/event-order.ts`          | 只在同一活动类型内部移动活动，防止“破晓 / 其他”相互穿插。                                    |
-| `src/lib/event-status.ts`         | 根据起止时间或人工覆盖值判断活动为即将开始、进行中或已经结束。                               |
-| `src/lib/comments.ts`             | 评论查询、根评论分页、回复树、评论定位、编辑期限以及回复/@提及通知生成。                     |
-| `src/lib/comment-rules.ts`        | 浏览器和服务端共用的评论最大长度与发言冷却时间。                                             |
-| `src/lib/treats.ts`               | 定义饼干/红茶类型并读取全站点心统计。                                                        |
-| `src/lib/site-settings.ts`        | 定义首页设置默认值，从数据库合并读取设置，并提供最近公开内容更新时间查询。                   |
-| `src/lib/slug-redirects.ts`       | 查询和记录文章/活动旧网址，合并重定向链并避免有效新网址被历史记录覆盖。                      |
-| `src/lib/db-search.ts`            | 转义 SQLite `LIKE` 中的 `%`、`_` 和反斜杠，防止搜索词被当作通配符。                          |
-| `src/lib/date-filter.ts`          | 解析后台评论筛选中的“年/月/日”文本，拒绝不完整或不存在的日期。                               |
-| `src/lib/date-time.ts`            | 在 SQLite UTC 时间与上海时区显示/筛选时间之间转换，并校验禁言截止时间。                      |
+| 文件                                       | 作用                                                                                         |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `src/lib/db.ts`                            | 打开并复用 SQLite 连接，设置 WAL/外键，按 `DATABASE_PATH` 或默认路径选择数据库，并执行迁移。 |
+| `src/lib/db-schema.ts`                     | 创建全部数据表、索引、默认设置和向后兼容字段；保留旧作者/分类表但当前站点不提供对应功能。    |
+| `src/lib/queries.ts`                       | 公开页面的集中查询层：文章、前后篇、活动、首页活动、评议资料、搜索、年份档案和分页。         |
+| `src/lib/admin.ts`                         | 后台通用工具：JSON 错误、唯一别名、文章顺序编号、ID 数组、活动月份和文章日期校验。           |
+| `src/lib/audit.ts`                         | 写入管理员操作记录和文章/活动 JSON 内容快照。                                                |
+| `src/lib/auth.ts`                          | 管理员认证：凭据初始化、HMAC 会话、Cookie、页面/API 权限检查及管理员改密。                   |
+| `src/lib/user-auth.ts`                     | 受邀用户认证：scrypt 密码、HMAC 会话、Cookie、输入校验、账号读取和登录失败封禁。             |
+| `src/lib/request-security.ts`              | 请求安全工具：判断 HTTPS、对来源信息生成不可逆指纹，并在 SQLite 中实行固定窗口限流。         |
+| `src/lib/safe-path.ts`                     | 只允许站内根相对路径，防止登录返回地址造成开放重定向。                                       |
+| `src/lib/client-fetch.ts`                  | 浏览器端通用 JSON 请求包装，统一处理正常响应、非 JSON 响应和断网。                           |
+| `src/lib/content.ts`                       | 清理 HTML、Markdown 转 HTML、生成摘要、生成网址别名以及格式化日期/月。                       |
+| `src/lib/content-limits.ts`                | 文章标题、摘要、HTML 和 Markdown 的统一大小上限。                                            |
+| `src/lib/uploaded-assets.ts`               | 登记后台上传图片、标记已被正文引用的图片，并回收超过一天仍未引用的临时文件。                 |
+| `src/lib/event-documents.ts`               | 评议资料的扩展名、文件名、大小和文件头校验，以及哈希存储路径和文件增删。                     |
+| `src/lib/event-map-settings.ts`            | 查询活动专题地图设置，并在旧数据库尚无记录时提供默认配置。                                   |
+| `src/lib/event-map-validation.ts`          | 后台专题地图表单的纯数据校验：图片地址、尺寸、必填标题及文本长度。                           |
+| `src/lib/event-map-node-validation.ts`     | 校验节点名称、公开文字和 0—1 相对坐标。                                                      |
+| `src/lib/event-map-nodes.ts`               | 查询公开地图节点及单个节点，并确认活动地图是否启用。                                         |
+| `src/lib/event-map-region-validation.ts`   | 校验区域名称、颜色、顶点数量、相对坐标和有效多边形面积。                                     |
+| `src/lib/event-map-regions.ts`             | 查询多边形区域，把数据库中的顶点 JSON 恢复为相对坐标数组。                                   |
+| `src/lib/event-map-relation-validation.ts` | 校验关系两端节点、名称和公开文字。                                                           |
+| `src/lib/event-map-relations.ts`           | 查询节点关系和端点名称，并验证关系两端节点仍然存在。                                         |
+| `src/lib/event-groups.ts`                  | 定义活动类型“破晓 / 其他”、标签、配色和类型校验。                                            |
+| `src/lib/event-order.ts`                   | 只在同一活动类型内部移动活动，防止“破晓 / 其他”相互穿插。                                    |
+| `src/lib/event-status.ts`                  | 根据起止时间或人工覆盖值判断活动为即将开始、进行中或已经结束。                               |
+| `src/lib/comments.ts`                      | 评论查询、根评论分页、回复树、评论定位、编辑期限以及回复/@提及通知生成。                     |
+| `src/lib/comment-rules.ts`                 | 浏览器和服务端共用的评论最大长度与发言冷却时间。                                             |
+| `src/lib/treats.ts`                        | 定义饼干/红茶类型并读取全站点心统计。                                                        |
+| `src/lib/site-settings.ts`                 | 定义首页设置默认值，从数据库合并读取设置，并提供最近公开内容更新时间查询。                   |
+| `src/lib/slug-redirects.ts`                | 查询和记录文章/活动旧网址，合并重定向链并避免有效新网址被历史记录覆盖。                      |
+| `src/lib/db-search.ts`                     | 转义 SQLite `LIKE` 中的 `%`、`_` 和反斜杠，防止搜索词被当作通配符。                          |
+| `src/lib/date-filter.ts`                   | 解析后台评论筛选中的“年/月/日”文本，拒绝不完整或不存在的日期。                               |
+| `src/lib/date-time.ts`                     | 在 SQLite UTC 时间与上海时区显示/筛选时间之间转换，并校验禁言截止时间。                      |
 
 ---
 

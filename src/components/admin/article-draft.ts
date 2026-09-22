@@ -12,6 +12,7 @@ export type ArticleInitial = {
   event_ids?: number[];
 };
 
+// 发布状态不属于可编辑草稿；提交到后端时统一公开。
 export type ArticleDraft = {
   title: string;
   slug: string;

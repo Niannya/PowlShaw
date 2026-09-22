@@ -60,6 +60,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     ? String((previous as { slug: string }).slug)
     : nextArticleSlug(eventIds, title);
   const coverUrl = String(body.cover_url || "") || null;
+  // 文章状态由保存动作决定，不接受浏览器提交的可编辑状态。
+  const status = "published";
   db.transaction(() => {
     recordContentRevision("article", id, "update", {
       article: previous,
@@ -78,7 +80,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       textExcerpt(content, 180),
       content,
       markdown,
-      "published",
+      status,
       publishedAt.value,
       coverUrl,
       body.is_pinned ? 1 : 0,

@@ -31,12 +31,6 @@
 不熟悉代码时，请先阅读 [`MAINTENANCE.md`](MAINTENANCE.md)。需要逐个了解源码文件时，
 参阅 [`SRC_FILE_GUIDE.md`](SRC_FILE_GUIDE.md)。
 
-前台常用固定文字集中在：
-
-```text
-src/config/site.ts
-```
-
 全站基础配色在 `src/styles/base.css`；页面样式按用途放在 `src/styles/`，
 `src/app/globals.css` 只负责按顺序引入，详细说明见 [`MAINTENANCE.md`](MAINTENANCE.md)。
 
@@ -54,7 +48,6 @@ src/
     admin/            后台表单、编辑器与草稿逻辑
     comments/         评论组件
     *.tsx             前台共用组件
-  config/site.ts      前台常用文案和导航
   lib/
     db.ts             数据库连接入口
     db-schema.ts      建表、兼容旧数据库的增量迁移
@@ -67,8 +60,8 @@ public/uploads/      后台上传的附件
 data/poxiao.db        本地 SQLite 数据库（不提交）
 ```
 
-只改文字请先看 `src/config/site.ts` 或在后台编辑；只改界面请从相应的
-`src/styles/` 文件入手。不要手动修改 `data/poxiao.db`。
+修改页面固定文字时直接编辑相应的 `page.tsx` 或组件；首页欢迎语和公告仍在后台编辑。
+只改界面请从相应的 `src/styles/` 文件入手。不要手动修改 `data/poxiao.db`。
 
 修改代码后可运行：
 

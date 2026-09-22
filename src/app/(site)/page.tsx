@@ -3,7 +3,6 @@ import { ArticleList } from "@/components/ArticleList";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { EventPanel } from "@/components/EventPanel";
 import { WelcomePanel } from "@/components/WelcomePanel";
-import { siteConfig } from "@/config/site";
 import { getFeaturedEvent, getRecentArticles } from "@/lib/queries";
 import { getSiteSettings } from "@/lib/site-settings";
 
@@ -42,7 +41,7 @@ export default function HomePage() {
         ) : null}
         <EventPanel event={event} />
         <section className="panel">
-          <h2 className="panel-title blue">{siteConfig.home.recentTitle}</h2>
+          <h2 className="panel-title blue">最近更新</h2>
           <div className="panel-body">
             <ArticleList articles={articles} />
           </div>

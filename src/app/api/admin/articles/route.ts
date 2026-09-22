@@ -41,6 +41,8 @@ export async function POST(request: Request) {
   if (!validEventIds(eventIds)) return jsonError("选择的活动已经不存在，请刷新页面。");
   const slug = nextArticleSlug(eventIds, title);
   const coverUrl = String(body.cover_url || "") || null;
+  // 未提交内容只存在浏览器本机；进入此接口即表示管理员正式保存并公开文章。
+  const status = "published";
   let articleId = 0;
   db.transaction(() => {
     const result = db
@@ -56,7 +58,7 @@ export async function POST(request: Request) {
         textExcerpt(content, 180),
         content,
         markdown,
-        "published",
+        status,
         publishedAt.value,
         coverUrl,
         body.is_pinned ? 1 : 0,

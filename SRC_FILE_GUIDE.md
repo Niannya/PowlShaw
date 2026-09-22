@@ -33,8 +33,8 @@
 | `src/app/(site)/layout.tsx`                               | 所有公开页面的共同布局，强制动态渲染并套用 `SiteShell` 的侧栏、状态栏和页脚。         |
 | `src/app/(site)/page.tsx`                                 | `/` 首页；组合欢迎区、站内公告、首页展示活动和最近更新文章。                          |
 | `src/app/(site)/not-found.tsx`                            | 公开站点的 404 页面。                                                                 |
-| `src/app/(site)/about/page.tsx`                           | `/about` 关于破晓；内容来自 `siteConfig.about`。                                      |
-| `src/app/(site)/changelog/page.tsx`                       | `/changelog` 更新记录；固定文案来自 `siteConfig.changelog`。                          |
+| `src/app/(site)/about/page.tsx`                           | `/about` 关于破晓及其页面内容。                                                       |
+| `src/app/(site)/changelog/page.tsx`                       | `/changelog` 更新记录及其固定内容。                                                   |
 | `src/app/(site)/articles/page.tsx`                        | `/articles` 全部已发布文章列表，每页 30 篇。                                          |
 | `src/app/(site)/articles/[slug]/page.tsx`                 | `/articles/文章别名` 文章详情；处理旧网址跳转、正文、所属活动、前后文章和评论分页。   |
 | `src/app/(site)/events/page.tsx`                          | `/events` 活动专题总目录；按“破晓 / 其他”分组显示活动卡片。                           |
@@ -198,12 +198,11 @@
 
 ---
 
-## 4. `src/config`：固定配置
+## 4. `src/config`：专题默认配置
 
-| 文件                       | 作用                                                                                           |
-| -------------------------- | ---------------------------------------------------------------------------------------------- |
-| `src/config/site.ts`       | 集中保存前台不经后台维护的固定文案：站名、左侧导航、分区标识、状态栏、页脚、关于页和更新记录。 |
-| `src/config/event-maps.ts` | 专题地图的首次建库默认值；日常内容由后台和数据库维护。                                         |
+| 文件                       | 作用                                                   |
+| -------------------------- | ------------------------------------------------------ |
+| `src/config/event-maps.ts` | 专题地图的首次建库默认值；日常内容由后台和数据库维护。 |
 
 ---
 
@@ -255,7 +254,7 @@
 
 ## 7. 修改时如何定位
 
-- 改固定文字：先看 `src/config/site.ts`。
+- 改固定文字：直接搜索原文并编辑对应的页面或组件。
 - 改首页欢迎语或公告：使用后台 `/admin/settings`，不要改代码默认值。
 - 改某个页面内容：从相应的 `page.tsx` 开始。
 - 改按钮点击后的行为：找对应的客户端组件，再找它请求的 `route.ts`。

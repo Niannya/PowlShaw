@@ -104,7 +104,6 @@ src/components/                 前台共用组件
 src/components/admin/           后台表单和编辑器
 src/components/admin/EventArticleManager.tsx
                                 活动嵌套分组及文章拖放编辑器
-src/config/site.ts              常用固定文案、导航、页脚
 src/lib/db.ts                   SQLite 连接
 src/lib/db-schema.ts            建表和向后兼容迁移
 src/lib/queries.ts              公开页面查询

@@ -1,18 +1,23 @@
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { siteConfig } from "@/config/site";
 
-export const metadata = { title: siteConfig.changelog.title };
+const pageTitle = "更新记录";
+const firstEntry = {
+  title: "网站建立",
+  content: "建立作品档案和活动专题页面。",
+};
+
+export const metadata = { title: pageTitle };
 
 export default function ChangelogPage() {
   return (
     <>
-      <Breadcrumbs items={[{ label: siteConfig.changelog.title }]} />
+      <Breadcrumbs items={[{ label: pageTitle }]} />
       <div className="page-pad">
-        <h1 className="site-heading">{siteConfig.changelog.title}</h1>
+        <h1 className="site-heading">{pageTitle}</h1>
         <section className="panel">
-          <h2 className="panel-title green">{siteConfig.changelog.entryTitle}</h2>
+          <h2 className="panel-title green">{firstEntry.title}</h2>
           <div className="panel-body">
-            <p>{siteConfig.changelog.entryText}</p>
+            <p>{firstEntry.content}</p>
           </div>
         </section>
       </div>

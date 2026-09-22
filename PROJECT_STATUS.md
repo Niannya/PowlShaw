@@ -226,18 +226,15 @@ pnpm build
 
 ## 10. 不要随意执行的命令
 
-以下命令用于旧站或原始活动资料的批量导入，不是普通启动命令：
+以下命令用于原始活动资料的批量导入或网址迁移，不是普通启动命令：
 
 ```bat
-pnpm db:import
-pnpm db:reset
 pnpm db:import-activities
 pnpm db:import-event-documents
 pnpm db:migrate-slugs
 ```
 
-尤其 `pnpm db:reset` 会重建内容。除非用户明确要求恢复/重导资料，并且已完成备份和预演，
-否则不要运行。
+除非用户明确要求重新整理资料或迁移网址，并且已完成备份和预演，否则不要运行。
 
 ## 11. 后续对话的工作原则
 

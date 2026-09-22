@@ -14,11 +14,9 @@
     "format:check": "prettier --check .",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "release:check": "python scripts/check_public_release.py",
-    "db:import": "python scripts/import_wxr.py \"网站残骸.xml\"",
     "db:import-activities": "python scripts/import_remaining_activities.py",
     "db:import-event-documents": "python scripts/import_event_documents.py",
-    "db:migrate-slugs": "node scripts/migrate_url_slugs.mjs --execute",
-    "db:reset": "python scripts/import_wxr.py \"网站残骸.xml\" --reset"
+    "db:migrate-slugs": "node scripts/migrate_url_slugs.mjs --execute"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",

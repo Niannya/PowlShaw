@@ -24,7 +24,6 @@
 - 活动月份、活动手动排序，以及文章发布日期（精确到日）
 - “列国纪”专属世界地图专题页、用户自有抽象节点与节点关系，以及地图图片和专题标题的后台维护
 - 图片上传（JPG、PNG、GIF、WebP，最大 5MB）
-- 可选的 WordPress WXR XML 导入工具
 - 桌面端和移动端响应式布局
 
 ## 日常维护
@@ -133,31 +132,6 @@ python -m pip install -r scripts/requirements-activities.txt
 pnpm db:import-activities
 ```
 
-## 可选：导入旧站 WordPress 内容
-
-下面的命令只用于明确需要恢复 `网站残骸.xml` 中的旧站内容时。不要把它和活动资料导入
-脚本混淆。
-
-保留现有数据库内容并补充导入：
-
-```powershell
-pnpm db:import
-```
-
-清空内容表后重新导入：
-
-```powershell
-pnpm db:reset
-```
-
-也可以直接执行：
-
-```powershell
-python scripts/import_wxr.py "网站残骸.xml" --reset
-```
-
-导入结果存放在 `data/poxiao.db`。原 XML 不会被修改。
-
 ## 上线前
 
 1. 修改 `.env.local` 中的管理密码和会话密钥。
@@ -178,7 +152,7 @@ python scripts/import_wxr.py "网站残骸.xml" --reset
 - `.env.local` 及其他真实环境变量；
 - `data/` 中的数据库、备份、导入报告和私密归档；
 - `public/uploads/` 中的用户上传内容；
-- `破晓相关/`、`破晓相关.zip` 和 `网站残骸.xml` 等原始资料。
+- `破晓相关/` 和 `破晓相关.zip` 等原始资料。
 
 首次提交或推送前运行：
 

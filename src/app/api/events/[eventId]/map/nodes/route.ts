@@ -1,7 +1,13 @@
 import { jsonError } from "@/lib/admin";
 import { getDb } from "@/lib/db";
 import { normalizeEventMapNode } from "@/lib/event-map-node-validation";
-import { eventHasEnabledMap, getEventMapNode, getEventMapNodes } from "@/lib/event-map-nodes";
+import {
+  eventHasEnabledMap,
+  eventMapArticleIdsExist,
+  getEventMapNode,
+  getEventMapNodes,
+  replaceEventMapNodeArticles,
+} from "@/lib/event-map-nodes";
 import { consumeRateLimit } from "@/lib/request-security";
 import { getUserFromRequest } from "@/lib/user-auth";
 
@@ -49,12 +55,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ eve
   const normalized = normalizeEventMapNode(await request.json().catch(() => null));
   if (!normalized.ok) return jsonError(normalized.error);
   const value = normalized.value;
-  const result = getDb()
-    .prepare(
-      `INSERT INTO event_map_nodes(event_id, user_id, name, description, notes, x, y)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(eventId, auth.user.id, value.name, value.description, value.notes, value.x, value.y);
-  const node = getEventMapNode(Number(result.lastInsertRowid));
+  if (!eventMapArticleIdsExist(value.article_ids)) {
+    return jsonError("关联文章不存在或尚未公开。");
+  }
+
+  // 节点和文章关联必须一起成功，避免节点已公开而关联列表只保存了一部分。
+  const db = getDb();
+  const nodeId = db.transaction(() => {
+    const result = db
+      .prepare(
+        `INSERT INTO event_map_nodes(event_id, user_id, name, description, notes, x, y)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(eventId, auth.user.id, value.name, value.description, value.notes, value.x, value.y);
+    const createdNodeId = Number(result.lastInsertRowid);
+    replaceEventMapNodeArticles(createdNodeId, value.article_ids);
+    return createdNodeId;
+  })();
+  const node = getEventMapNode(nodeId);
   return Response.json({ ok: true, node }, { status: 201 });
 }

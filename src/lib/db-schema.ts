@@ -134,6 +134,15 @@ export function migrate(db: Database.Database) {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- 节点可以选择性关联多篇已公开文章；顺序按用户选择次序保存。
+    CREATE TABLE IF NOT EXISTS event_map_node_articles (
+      node_id INTEGER NOT NULL REFERENCES event_map_nodes(id) ON DELETE CASCADE,
+      article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (node_id, article_id)
+    );
+
     -- 节点之间的抽象关系。关系是独立的用户内容，不代表地图上的真实路线。
     CREATE TABLE IF NOT EXISTS event_map_relations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -331,6 +340,8 @@ export function migrate(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_event_map_nodes_event
       ON event_map_nodes(event_id, deleted_at, created_at);
     CREATE INDEX IF NOT EXISTS idx_event_map_nodes_user ON event_map_nodes(user_id, deleted_at);
+    CREATE INDEX IF NOT EXISTS idx_event_map_node_articles_article
+      ON event_map_node_articles(article_id, node_id);
     CREATE INDEX IF NOT EXISTS idx_event_map_relations_event
       ON event_map_relations(event_id, deleted_at, created_at);
     CREATE INDEX IF NOT EXISTS idx_event_map_relations_user

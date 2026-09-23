@@ -1,15 +1,18 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   FormEvent,
   KeyboardEvent,
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
-import type { EditableEventMapNode } from "@/lib/event-map-node-validation";
-import type { EventMapNode } from "@/lib/event-map-nodes";
+import {
+  EVENT_MAP_NODE_ARTICLES_MAX_COUNT,
+  type EditableEventMapNode,
+} from "@/lib/event-map-node-validation";
+import type { EventMapArticle, EventMapNode } from "@/lib/event-map-nodes";
 import {
   DEFAULT_EVENT_MAP_REGION_COLOR,
   EVENT_MAP_REGION_MAX_POINTS,
@@ -34,6 +37,7 @@ type DragState = {
 
 type NodeFormState = EditableEventMapNode & {
   nodeId?: number;
+  articles: EventMapArticle[];
 };
 
 type RegionFormState = EditableEventMapRegion & {
@@ -170,17 +174,55 @@ export function ImageMapViewer({
   const [relationMode, setRelationMode] = useState<RelationMode>();
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [articleQuery, setArticleQuery] = useState("");
+  const [articleResults, setArticleResults] = useState<EventMapArticle[]>([]);
+  const [isSearchingArticles, setIsSearchingArticles] = useState(false);
 
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
   const selectedRegion = regions.find((region) => region.id === selectedRegionId);
   const selectedRelation = relations.find((relation) => relation.id === selectedRelationId);
   const canContribute = Boolean(eventId && currentUser?.canEdit);
+  const isEditingNode = Boolean(nodeForm);
   const isChoosingMapPosition = Boolean(isPlacing || movingNode || regionDrawing);
   const renderedNodes = movingNode
     ? nodes.map((node) =>
         node.id === movingNode.node.id ? { ...node, x: movingNode.x, y: movingNode.y } : node,
       )
     : nodes;
+  const selectableArticleResults = nodeForm
+    ? articleResults.filter((article) => !nodeForm.article_ids.includes(article.id))
+    : [];
+
+  // Search only after a short pause so typing does not issue one request per keystroke.
+  useEffect(() => {
+    const query = articleQuery.trim();
+    if (!eventId || !isEditingNode || !query) return;
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setIsSearchingArticles(true);
+      const response = await fetch(
+        `/api/events/${eventId}/map/articles?q=${encodeURIComponent(query)}`,
+        { signal: controller.signal },
+      ).catch(() => undefined);
+      if (controller.signal.aborted) return;
+
+      setIsSearchingArticles(false);
+      if (!response?.ok) {
+        setArticleResults([]);
+        return;
+      }
+      const result = (await response.json().catch(() => ({}))) as {
+        articles?: EventMapArticle[];
+      };
+      setArticleResults(result.articles || []);
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [articleQuery, eventId, isEditingNode]);
 
   function nodeName(nodeId: number) {
     return nodes.find((node) => node.id === nodeId)?.name || "已隐藏节点";
@@ -190,9 +232,26 @@ export function ImageMapViewer({
     setSelectedNodeId(undefined);
     setSelectedRegionId(undefined);
     setSelectedRelationId(undefined);
-    setNodeForm(undefined);
+    closeNodeEditor();
     setRegionForm(undefined);
     setRelationForm(undefined);
+  }
+
+  function resetArticleSearch() {
+    setArticleQuery("");
+    setArticleResults([]);
+    setIsSearchingArticles(false);
+  }
+
+  function closeNodeEditor() {
+    setNodeForm(undefined);
+    resetArticleSearch();
+  }
+
+  function changeArticleQuery(value: string) {
+    setArticleQuery(value);
+    setArticleResults([]);
+    setIsSearchingArticles(Boolean(value.trim()));
   }
 
   function changeZoom(value: number) {
@@ -448,10 +507,13 @@ export function ImageMapViewer({
     if (!isPlacing) return;
 
     setIsPlacing(false);
+    resetArticleSearch();
     setNodeForm({
       name: "",
       description: "",
       notes: "",
+      article_ids: [],
+      articles: [],
       ...point,
     });
     setMessage("");
@@ -484,7 +546,7 @@ export function ImageMapViewer({
       return;
     }
 
-    setNodeForm(undefined);
+    closeNodeEditor();
     setRegionForm(undefined);
     setRelationForm(undefined);
     setIsPlacing(false);
@@ -503,7 +565,7 @@ export function ImageMapViewer({
       setMessage("请点击两个节点来建立关系，而不是点击已有关系线。");
       return;
     }
-    setNodeForm(undefined);
+    closeNodeEditor();
     setRegionForm(undefined);
     setRelationForm(undefined);
     setSelectedNodeId(undefined);
@@ -517,7 +579,7 @@ export function ImageMapViewer({
       setMessage(relationMode ? "请点击两个节点来建立关系。" : "请点击地图空白处完成当前操作。");
       return;
     }
-    setNodeForm(undefined);
+    closeNodeEditor();
     setRegionForm(undefined);
     setRelationForm(undefined);
     setSelectedNodeId(undefined);
@@ -527,6 +589,7 @@ export function ImageMapViewer({
   }
 
   function editNode(node: EventMapNode) {
+    resetArticleSearch();
     setNodeForm({
       nodeId: node.id,
       name: node.name,
@@ -534,8 +597,35 @@ export function ImageMapViewer({
       notes: node.notes,
       x: node.x,
       y: node.y,
+      article_ids: node.article_ids,
+      articles: node.articles,
     });
     setSelectedNodeId(undefined);
+  }
+
+  function addNodeArticle(article: EventMapArticle) {
+    if (!nodeForm || nodeForm.article_ids.includes(article.id)) return;
+    if (nodeForm.article_ids.length >= EVENT_MAP_NODE_ARTICLES_MAX_COUNT) {
+      setMessage(`每个节点最多关联 ${EVENT_MAP_NODE_ARTICLES_MAX_COUNT} 篇文章。`);
+      return;
+    }
+    setNodeForm({
+      ...nodeForm,
+      article_ids: [...nodeForm.article_ids, article.id],
+      articles: [...nodeForm.articles, article],
+    });
+    setArticleQuery("");
+    setArticleResults([]);
+    setMessage("");
+  }
+
+  function removeNodeArticle(articleId: number) {
+    if (!nodeForm) return;
+    setNodeForm({
+      ...nodeForm,
+      article_ids: nodeForm.article_ids.filter((id) => id !== articleId),
+      articles: nodeForm.articles.filter((article) => article.id !== articleId),
+    });
   }
 
   function editRegion(region: EventMapRegion) {
@@ -599,7 +689,7 @@ export function ImageMapViewer({
       if (index < 0) return [...items, result.node!];
       return items.map((item) => (item.id === result.node!.id ? result.node! : item));
     });
-    setNodeForm(undefined);
+    closeNodeEditor();
     setSelectedNodeId(result.node.id);
     setMessage(nodeForm.nodeId ? "节点已更新。" : "节点已添加并公开显示。");
   }
@@ -1141,11 +1231,7 @@ export function ImageMapViewer({
           <form className="world-map-node-panel world-map-node-form" onSubmit={submitNode}>
             <div className="world-map-node-panel-heading">
               <h3>{nodeForm.nodeId ? "编辑节点" : "新节点"}</h3>
-              <button
-                type="button"
-                aria-label="关闭节点编辑"
-                onClick={() => setNodeForm(undefined)}
-              >
+              <button type="button" aria-label="关闭节点编辑" onClick={closeNodeEditor}>
                 ×
               </button>
             </div>
@@ -1177,6 +1263,58 @@ export function ImageMapViewer({
                 onChange={(event) => setNodeForm({ ...nodeForm, notes: event.target.value })}
               />
             </label>
+            <fieldset className="world-map-node-article-picker">
+              <legend>关联文章（可选）</legend>
+              {nodeForm.articles.length ? (
+                <ul className="world-map-node-article-selection">
+                  {nodeForm.articles.map((article) => (
+                    <li key={article.id}>
+                      <span>{article.title}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeNodeArticle(article.id)}
+                        aria-label={`取消关联《${article.title}》`}
+                      >
+                        移除
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <label>
+                搜索已公开文章
+                <input
+                  type="search"
+                  value={articleQuery}
+                  onChange={(event) => changeArticleQuery(event.target.value)}
+                  placeholder="输入标题或网址别名"
+                  maxLength={100}
+                  autoComplete="off"
+                />
+              </label>
+              {articleQuery.trim() ? (
+                <div className="world-map-node-article-results">
+                  {isSearchingArticles ? (
+                    <small>正在搜索…</small>
+                  ) : selectableArticleResults.length ? (
+                    selectableArticleResults.map((article) => (
+                      <button
+                        type="button"
+                        key={article.id}
+                        onClick={() => addNodeArticle(article)}
+                      >
+                        {article.title}
+                      </button>
+                    ))
+                  ) : (
+                    <small>没有找到可关联的文章。</small>
+                  )}
+                </div>
+              ) : null}
+              <small>
+                已关联 {nodeForm.articles.length}/{EVENT_MAP_NODE_ARTICLES_MAX_COUNT} 篇
+              </small>
+            </fieldset>
             <small>
               位置：{(nodeForm.x * 100).toFixed(1)}%，{(nodeForm.y * 100).toFixed(1)}%
             </small>
@@ -1184,7 +1322,7 @@ export function ImageMapViewer({
               <button type="submit" disabled={isSaving}>
                 {isSaving ? "保存中…" : "保存并公开"}
               </button>
-              <button type="button" onClick={() => setNodeForm(undefined)} disabled={isSaving}>
+              <button type="button" onClick={closeNodeEditor} disabled={isSaving}>
                 取消
               </button>
             </div>
@@ -1465,6 +1603,18 @@ export function ImageMapViewer({
               <div className="world-map-node-notes">
                 <strong>备注</strong>
                 <p>{selectedNode.notes}</p>
+              </div>
+            ) : null}
+            {selectedNode.articles.length ? (
+              <div className="world-map-node-articles">
+                <strong>关联文章</strong>
+                <ul>
+                  {selectedNode.articles.map((article) => (
+                    <li key={article.id}>
+                      <a href={`/articles/${article.slug}`}>{article.title}</a>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ) : null}
             <p className="world-map-node-owner">创建者：{selectedNode.owner_name}</p>

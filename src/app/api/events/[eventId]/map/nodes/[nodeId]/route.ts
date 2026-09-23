@@ -1,7 +1,12 @@
 import { jsonError } from "@/lib/admin";
 import { getDb } from "@/lib/db";
 import { normalizeEventMapNode } from "@/lib/event-map-node-validation";
-import { eventHasEnabledMap, getEventMapNode } from "@/lib/event-map-nodes";
+import {
+  eventHasEnabledMap,
+  eventMapArticleIdsExist,
+  getEventMapNode,
+  replaceEventMapNodeArticles,
+} from "@/lib/event-map-nodes";
 import { consumeRateLimit } from "@/lib/request-security";
 import { getUserFromRequest } from "@/lib/user-auth";
 
@@ -48,23 +53,34 @@ export async function PUT(request: Request, { params }: RouteContext) {
   const normalized = normalizeEventMapNode(await request.json().catch(() => null));
   if (!normalized.ok) return jsonError(normalized.error);
   const value = normalized.value;
-  const result = getDb()
-    .prepare(
-      `UPDATE event_map_nodes
-       SET name=?, description=?, notes=?, x=?, y=?, updated_at=CURRENT_TIMESTAMP
-       WHERE id=? AND event_id=? AND user_id=? AND deleted_at IS NULL`,
-    )
-    .run(
-      value.name,
-      value.description,
-      value.notes,
-      value.x,
-      value.y,
-      nodeId,
-      eventId,
-      auth.user.id,
-    );
-  if (!result.changes) return jsonError("地图节点不存在，或你无权编辑。", 404);
+  if (!eventMapArticleIdsExist(value.article_ids)) {
+    return jsonError("关联文章不存在或尚未公开。");
+  }
+
+  // 先用带所有者条件的 UPDATE 确认权限，再在同一事务内替换文章关联。
+  const db = getDb();
+  const updated = db.transaction(() => {
+    const result = db
+      .prepare(
+        `UPDATE event_map_nodes
+         SET name=?, description=?, notes=?, x=?, y=?, updated_at=CURRENT_TIMESTAMP
+         WHERE id=? AND event_id=? AND user_id=? AND deleted_at IS NULL`,
+      )
+      .run(
+        value.name,
+        value.description,
+        value.notes,
+        value.x,
+        value.y,
+        nodeId,
+        eventId,
+        auth.user.id,
+      );
+    if (!result.changes) return false;
+    replaceEventMapNodeArticles(nodeId, value.article_ids);
+    return true;
+  })();
+  if (!updated) return jsonError("地图节点不存在，或你无权编辑。", 404);
   return Response.json({ ok: true, node: getEventMapNode(nodeId) });
 }
 

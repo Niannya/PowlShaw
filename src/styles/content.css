@@ -563,6 +563,20 @@
 .world-map-node-notes p {
   margin: 2px 0 0;
 }
+.world-map-node-articles {
+  margin: 9px 0;
+  padding: 6px 8px;
+  background: #f6eedc;
+  border-left: 3px solid #49769a;
+  font-size: 13px;
+}
+.world-map-node-articles ul {
+  margin: 3px 0 0;
+  padding-left: 20px;
+}
+.world-map-node-articles li + li {
+  margin-top: 2px;
+}
 .world-map-node-form label {
   display: grid;
   gap: 2px;
@@ -592,6 +606,76 @@
 }
 .world-map-node-form small {
   color: #756a5c;
+}
+.world-map-node-article-picker {
+  min-width: 0;
+  margin: 10px 0;
+  padding: 7px 8px 8px;
+  border: 1px dotted #8e806c;
+}
+.world-map-node-article-picker legend {
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: bold;
+}
+.world-map-node-article-selection {
+  display: grid;
+  gap: 4px;
+  margin: 2px 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.world-map-node-article-selection li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 5px;
+  background: #f1e8d7;
+  border: 1px solid #c3af90;
+  font-size: 12px;
+}
+.world-map-node-article-selection span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.world-map-node-article-selection button {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  color: #842d26;
+  background: #fffaf0;
+  border: 1px solid #a56c65;
+  font: inherit;
+  cursor: pointer;
+}
+.world-map-node-article-results {
+  display: grid;
+  max-height: 150px;
+  margin: -4px 0 6px;
+  overflow: auto;
+  background: #fffef8;
+  border: 1px solid #8e806c;
+}
+.world-map-node-article-results button {
+  padding: 5px 6px;
+  color: #214d79;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px dotted #c3af90;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.world-map-node-article-results button:last-child {
+  border-bottom: 0;
+}
+.world-map-node-article-results button:hover,
+.world-map-node-article-results button:focus-visible {
+  background: #fff3bf;
+}
+.world-map-node-article-results small {
+  padding: 5px 6px;
 }
 .world-map-node-form .world-map-region-color-input {
   width: 72px;

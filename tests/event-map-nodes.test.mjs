@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { normalizeEventMapNode } from "../src/lib/event-map-node-validation.ts";
+import {
+  EVENT_MAP_NODE_ARTICLES_MAX_COUNT,
+  normalizeEventMapNode,
+} from "../src/lib/event-map-node-validation.ts";
 
 test("map nodes normalize public text and relative coordinates", () => {
   assert.deepEqual(
@@ -19,7 +22,38 @@ test("map nodes normalize public text and relative coordinates", () => {
         notes: "尚待补充。",
         x: 0.123457,
         y: 0.75,
+        article_ids: [],
       },
+    },
+  );
+});
+
+test("map nodes normalize unique article associations in selection order", () => {
+  const result = normalizeEventMapNode({
+    name: "节点",
+    x: 0.5,
+    y: 0.5,
+    article_ids: [7, "9", 7],
+  });
+  assert.equal(result.ok, true);
+  if (result.ok) assert.deepEqual(result.value.article_ids, [7, 9]);
+});
+
+test("map nodes reject invalid or excessive article associations", () => {
+  assert.deepEqual(normalizeEventMapNode({ name: "节点", x: 0.5, y: 0.5, article_ids: [0] }), {
+    ok: false,
+    error: "节点关联的文章不正确。",
+  });
+  assert.deepEqual(
+    normalizeEventMapNode({
+      name: "节点",
+      x: 0.5,
+      y: 0.5,
+      article_ids: Array.from({ length: EVENT_MAP_NODE_ARTICLES_MAX_COUNT + 1 }, (_, i) => i + 1),
+    }),
+    {
+      ok: false,
+      error: `每个节点最多关联 ${EVENT_MAP_NODE_ARTICLES_MAX_COUNT} 篇文章。`,
     },
   );
 });

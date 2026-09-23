@@ -115,6 +115,7 @@
 
 | 文件                                                               | 请求与作用                                                      |
 | ------------------------------------------------------------------ | --------------------------------------------------------------- |
+| `src/app/api/events/[eventId]/map/articles/route.ts`               | `GET` 已公开文章搜索；供节点编辑器选择可选文章关联。            |
 | `src/app/api/events/[eventId]/map/nodes/route.ts`                  | `GET/POST` 活动地图节点；公开读取，登录用户创建自己的节点。     |
 | `src/app/api/events/[eventId]/map/nodes/[nodeId]/route.ts`         | `PUT/DELETE` 自有节点；修改信息或位置，以及软删除。             |
 | `src/app/api/events/[eventId]/map/regions/route.ts`                | `GET/POST` 多边形区域；公开读取，登录用户圈选并创建自己的区域。 |
@@ -237,8 +238,8 @@
 | `src/lib/event-documents.ts`               | 评议资料的扩展名、文件名、大小和文件头校验，以及哈希存储路径和文件增删。                     |
 | `src/lib/event-map-settings.ts`            | 查询活动专题地图设置，并在旧数据库尚无记录时提供默认配置。                                   |
 | `src/lib/event-map-validation.ts`          | 后台专题地图表单的纯数据校验：图片地址、尺寸、必填标题及文本长度。                           |
-| `src/lib/event-map-node-validation.ts`     | 校验节点名称、公开文字和 0—1 相对坐标。                                                      |
-| `src/lib/event-map-nodes.ts`               | 查询公开地图节点及单个节点，并确认活动地图是否启用。                                         |
+| `src/lib/event-map-node-validation.ts`     | 校验节点名称、公开文字、0—1 相对坐标和可选文章编号列表。                                     |
+| `src/lib/event-map-nodes.ts`               | 查询地图节点与关联文章、搜索已公开文章，并确认活动地图是否启用。                             |
 | `src/lib/event-map-region-validation.ts`   | 校验区域名称、颜色、顶点数量、相对坐标和有效多边形面积。                                     |
 | `src/lib/event-map-regions.ts`             | 查询多边形区域，把数据库中的顶点 JSON 恢复为相对坐标数组。                                   |
 | `src/lib/event-map-relation-validation.ts` | 校验关系两端节点、名称和公开文字。                                                           |

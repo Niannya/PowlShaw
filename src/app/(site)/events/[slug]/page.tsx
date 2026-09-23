@@ -10,7 +10,13 @@ import { eventStatus, getArticlesByEvent, getEvent, getEventDocuments } from "@/
 import { getSlugRedirect } from "@/lib/slug-redirects";
 
 const labels = { active: "进行中", upcoming: "即将开始", ended: "已经结束" };
-export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function EventPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ snapshot?: string | string[] }>;
+}) {
   const requestedSlug = decodeURIComponent((await params).slug);
   const event = getEvent(requestedSlug);
   if (!event) {
@@ -19,7 +25,21 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
     notFound();
   }
   const eventMap = getEventMapSettingsBySlug(event.slug);
-  if (eventMap) return <EventMapSpecialView event={event} map={eventMap} />;
+  const snapshotValue = (await searchParams).snapshot;
+  const snapshotId = Array.isArray(snapshotValue) ? undefined : Number(snapshotValue);
+  if (eventMap) {
+    return (
+      <EventMapSpecialView
+        event={event}
+        map={eventMap}
+        snapshotId={
+          typeof snapshotId === "number" && Number.isSafeInteger(snapshotId) && snapshotId > 0
+            ? snapshotId
+            : undefined
+        }
+      />
+    );
+  }
 
   const status = eventStatus(event);
   const articles = getArticlesByEvent(event.id);

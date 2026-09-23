@@ -85,17 +85,19 @@
 
 ### 2.6 管理员活动接口
 
-| 文件                                                            | 请求与作用                                                                                  |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `src/app/api/admin/events/route.ts`                             | `POST /api/admin/events`；创建活动，校验活动类型、月份、别名和正文，并记录内容快照。        |
-| `src/app/api/admin/events/[id]/route.ts`                        | `PUT/DELETE /api/admin/events/编号`；更新或删除活动，保存旧网址跳转、内容快照和审计记录。   |
-| `src/app/api/admin/events/[id]/map/route.ts`                    | `PUT /api/admin/events/编号/map`；校验并保存专题地图、显示状态和专题页标题，登记上传图片。  |
-| `src/app/api/admin/events/order/route.ts`                       | `PUT /api/admin/events/order`；保存活动在各自类型中的排列顺序。                             |
-| `src/app/api/admin/events/featured/route.ts`                    | `PUT /api/admin/events/featured`；把指定已有活动设为首页唯一展示活动。                      |
-| `src/app/api/admin/events/[id]/articles/route.ts`               | `PUT /api/admin/events/编号/articles`；一次性保存空分组、嵌套路径、分组顺序及文章拖放顺序。 |
-| `src/app/api/admin/events/[id]/documents/route.ts`              | `POST /api/admin/events/编号/documents`；校验并上传活动评议资料，同时建立数据库记录。       |
-| `src/app/api/admin/events/[id]/documents/[documentId]/route.ts` | `PUT/DELETE` 单个评议资料；修改显示名称/栏目说明，或删除数据库记录和对应文件。              |
-| `src/app/api/admin/events/[id]/documents/order/route.ts`        | `PUT` 评议资料顺序；校验编号归属后保存排列。                                                |
+| 文件                                                                | 请求与作用                                                                                  |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `src/app/api/admin/events/route.ts`                                 | `POST /api/admin/events`；创建活动，校验活动类型、月份、别名和正文，并记录内容快照。        |
+| `src/app/api/admin/events/[id]/route.ts`                            | `PUT/DELETE /api/admin/events/编号`；更新或删除活动，保存旧网址跳转、内容快照和审计记录。   |
+| `src/app/api/admin/events/[id]/map/route.ts`                        | `PUT /api/admin/events/编号/map`；校验并保存专题地图、显示状态和专题页标题，登记上传图片。  |
+| `src/app/api/admin/events/[id]/map/snapshots/route.ts`              | `POST` 手动记录当前地图、节点、区域、关系和文章关联的世界快照。                             |
+| `src/app/api/admin/events/[id]/map/snapshots/[snapshotId]/route.ts` | `DELETE` 删除指定活动的一份世界快照，并记录管理审计。                                       |
+| `src/app/api/admin/events/order/route.ts`                           | `PUT /api/admin/events/order`；保存活动在各自类型中的排列顺序。                             |
+| `src/app/api/admin/events/featured/route.ts`                        | `PUT /api/admin/events/featured`；把指定已有活动设为首页唯一展示活动。                      |
+| `src/app/api/admin/events/[id]/articles/route.ts`                   | `PUT /api/admin/events/编号/articles`；一次性保存空分组、嵌套路径、分组顺序及文章拖放顺序。 |
+| `src/app/api/admin/events/[id]/documents/route.ts`                  | `POST /api/admin/events/编号/documents`；校验并上传活动评议资料，同时建立数据库记录。       |
+| `src/app/api/admin/events/[id]/documents/[documentId]/route.ts`     | `PUT/DELETE` 单个评议资料；修改显示名称/栏目说明，或删除数据库记录和对应文件。              |
+| `src/app/api/admin/events/[id]/documents/order/route.ts`            | `PUT` 评议资料顺序；校验编号归属后保存排列。                                                |
 
 ### 2.7 其他管理员接口
 
@@ -138,20 +140,21 @@
 
 ### 3.1 前台公共组件
 
-| 文件                                            | 作用                                                                                   |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `src/components/SiteShell.tsx`                  | 公开站点总框架；生成左侧导航、年份档案、顶部时间与登录状态、主内容和页脚建站日期。     |
-| `src/components/SectionLogo.tsx`                | 根据当前路径切换左上角“首页 / 作品 / 活动 / 搜索 / 账号”等不同标识文案与配色。         |
-| `src/components/SiteClock.tsx`                  | 浏览器端每秒更新顶部本地日期和时间。                                                   |
-| `src/components/Breadcrumbs.tsx`                | 生成从首页开始的面包屑导航。                                                           |
-| `src/components/AnnouncementPanel.tsx`          | 首页公告面板；过滤危险链接，只接受站内路径或 HTTP/HTTPS 地址。                         |
-| `src/components/WelcomePanel.tsx`               | 首页欢迎区；记录访问、处理饼干/红茶点击、显示统计以及正常/摔碎动画。                   |
-| `src/components/ArticleList.tsx`                | 通用文章列表；显示置顶标记、标题链接和发布日期。                                       |
-| `src/components/EventPanel.tsx`                 | 首页展示活动面板；显示活动状态、简介、月份和入口。                                     |
-| `src/components/EventDirectoryCard.tsx`         | 活动专题页及后台预览共用的活动卡片。                                                   |
-| `src/components/EventArticleDirectory.tsx`      | 把文章的 `section_path` 转成任意层级的树，在活动前台按分组嵌套展示。                   |
-| `src/components/maps/ImageMapViewer.tsx`        | 地图查看及共创编辑器；处理缩放、节点、区域、关系和所有者操作。                         |
-| `src/components/events/EventMapSpecialView.tsx` | 地图型活动的专属专题模板；组合活动资料、地图、正文、附件和作品目录，并兼容活动改网址。 |
+| 文件                                               | 作用                                                                                   |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `src/components/SiteShell.tsx`                     | 公开站点总框架；生成左侧导航、年份档案、顶部时间与登录状态、主内容和页脚建站日期。     |
+| `src/components/SectionLogo.tsx`                   | 根据当前路径切换左上角“首页 / 作品 / 活动 / 搜索 / 账号”等不同标识文案与配色。         |
+| `src/components/SiteClock.tsx`                     | 浏览器端每秒更新顶部本地日期和时间。                                                   |
+| `src/components/Breadcrumbs.tsx`                   | 生成从首页开始的面包屑导航。                                                           |
+| `src/components/AnnouncementPanel.tsx`             | 首页公告面板；过滤危险链接，只接受站内路径或 HTTP/HTTPS 地址。                         |
+| `src/components/WelcomePanel.tsx`                  | 首页欢迎区；记录访问、处理饼干/红茶点击、显示统计以及正常/摔碎动画。                   |
+| `src/components/ArticleList.tsx`                   | 通用文章列表；显示置顶标记、标题链接和发布日期。                                       |
+| `src/components/EventPanel.tsx`                    | 首页展示活动面板；显示活动状态、简介、月份和入口。                                     |
+| `src/components/EventDirectoryCard.tsx`            | 活动专题页及后台预览共用的活动卡片。                                                   |
+| `src/components/EventArticleDirectory.tsx`         | 把文章的 `section_path` 转成任意层级的树，在活动前台按分组嵌套展示。                   |
+| `src/components/maps/ImageMapViewer.tsx`           | 地图查看及共创编辑器；处理缩放、节点、区域、关系和所有者操作。                         |
+| `src/components/maps/EventMapSnapshotSelector.tsx` | 在当前世界与管理员保存的只读历史快照之间切换。                                         |
+| `src/components/events/EventMapSpecialView.tsx`    | 地图型活动的专属专题模板；组合活动资料、地图、正文、附件和作品目录，并兼容活动改网址。 |
 
 ### 3.2 普通账号组件
 
@@ -198,15 +201,16 @@
 
 ### 3.6 活动和站点管理组件
 
-| 文件                                            | 作用                                                                                         |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `src/components/admin/EventForm.tsx`            | 活动基础资料表单；编辑名称、网址、类型、简介、起止月份、状态、横幅和富文本/Markdown 介绍。   |
-| `src/components/admin/EventOrderManager.tsx`    | 活动管理的所见即所得卡片；按“破晓 / 其他”单组拖动或选择位置排序，并设置首页展示活动。        |
-| `src/components/admin/EventArticleManager.tsx`  | 活动作品的单列嵌套编辑器；创建、重命名、删除、拖动同级分组，并把文章拖入任意层级后批量保存。 |
-| `src/components/admin/EventDocumentManager.tsx` | 活动评议资料管理；上传、改名、填写栏目说明、调整顺序和删除文件。                             |
-| `src/components/admin/EventMapSettingsForm.tsx` | “列国纪”专题设置；上传/隐藏地图并编辑独立地图页与专题各区标题。                              |
-| `src/components/admin/SiteSettingsForm.tsx`     | 编辑首页欢迎语各行文字、点心按钮文案、访问次数前后文字及站内公告。                           |
-| `src/components/admin/UserManager.tsx`          | 创建和维护受邀账号；编辑显示名、私密备注、密码、启停、禁言，并显示评论及点心统计。           |
+| 文件                                               | 作用                                                                                         |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `src/components/admin/EventForm.tsx`               | 活动基础资料表单；编辑名称、网址、类型、简介、起止月份、状态、横幅和富文本/Markdown 介绍。   |
+| `src/components/admin/EventOrderManager.tsx`       | 活动管理的所见即所得卡片；按“破晓 / 其他”单组拖动或选择位置排序，并设置首页展示活动。        |
+| `src/components/admin/EventArticleManager.tsx`     | 活动作品的单列嵌套编辑器；创建、重命名、删除、拖动同级分组，并把文章拖入任意层级后批量保存。 |
+| `src/components/admin/EventDocumentManager.tsx`    | 活动评议资料管理；上传、改名、填写栏目说明、调整顺序和删除文件。                             |
+| `src/components/admin/EventMapSettingsForm.tsx`    | “列国纪”专题设置；上传/隐藏地图并编辑独立地图页与专题各区标题。                              |
+| `src/components/admin/EventMapSnapshotManager.tsx` | 手动创建、查看和删除指定日期的世界快照。                                                     |
+| `src/components/admin/SiteSettingsForm.tsx`        | 编辑首页欢迎语各行文字、点心按钮文案、访问次数前后文字及站内公告。                           |
+| `src/components/admin/UserManager.tsx`             | 创建和维护受邀账号；编辑显示名、私密备注、密码、启停、禁言，并显示评论及点心统计。           |
 
 ---
 
@@ -238,6 +242,8 @@
 | `src/lib/event-documents.ts`               | 评议资料的扩展名、文件名、大小和文件头校验，以及哈希存储路径和文件增删。                     |
 | `src/lib/event-map-settings.ts`            | 查询活动专题地图设置，并在旧数据库尚无记录时提供默认配置。                                   |
 | `src/lib/event-map-validation.ts`          | 后台专题地图表单的纯数据校验：图片地址、尺寸、必填标题及文本长度。                           |
+| `src/lib/event-map-snapshot-validation.ts` | 校验管理员填写的快照日期、名称和公开说明。                                                   |
+| `src/lib/event-map-snapshots.ts`           | 把当前地图完整保存为不可变 JSON 快照，并读取公开时间线。                                     |
 | `src/lib/event-map-node-validation.ts`     | 校验节点名称、公开文字、0—1 相对坐标和可选文章编号列表。                                     |
 | `src/lib/event-map-nodes.ts`               | 查询地图节点与关联文章、搜索已公开文章，并确认活动地图是否启用。                             |
 | `src/lib/event-map-region-validation.ts`   | 校验区域名称、颜色、顶点数量、相对坐标和有效多边形面积。                                     |

@@ -58,6 +58,17 @@
     align-items: flex-start;
     flex-direction: column;
   }
+  .world-map-timeline {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .world-map-timeline label,
+  .world-map-timeline div {
+    flex-basis: auto;
+  }
+  .world-map-timeline div {
+    text-align: left;
+  }
   .world-map-toolbar .world-map-original-link {
     margin-left: 0;
   }
@@ -200,6 +211,16 @@
   }
   .event-map-copy-grid {
     grid-template-columns: 1fr;
+  }
+  .event-map-snapshot-form {
+    grid-template-columns: 1fr;
+  }
+  .event-map-snapshot-description {
+    grid-column: auto;
+  }
+  .event-map-snapshot-list article {
+    align-items: flex-start;
+    flex-direction: column;
   }
   .event-section-creator {
     grid-template-columns: 1fr auto;

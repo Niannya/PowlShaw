@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   description: "在共同书写的世界中，浏览地图、设定与故事。",
 };
 
-export default function LegendsOfCountriesPage() {
+export default async function LegendsOfCountriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ snapshot?: string | string[] }>;
+}) {
   const event = getEvent(slug);
   if (!event) {
     const target = getSlugRedirect("event", slug);
@@ -22,5 +26,18 @@ export default function LegendsOfCountriesPage() {
   const map = getEventMapSettingsBySlug(slug);
   if (!map) notFound();
 
-  return <EventMapSpecialView event={event} map={map} />;
+  const snapshotValue = (await searchParams).snapshot;
+  const snapshotId = Array.isArray(snapshotValue) ? undefined : Number(snapshotValue);
+
+  return (
+    <EventMapSpecialView
+      event={event}
+      map={map}
+      snapshotId={
+        typeof snapshotId === "number" && Number.isSafeInteger(snapshotId) && snapshotId > 0
+          ? snapshotId
+          : undefined
+      }
+    />
+  );
 }

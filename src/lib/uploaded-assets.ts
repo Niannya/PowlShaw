@@ -39,11 +39,12 @@ export function cleanupUnreferencedUploads() {
     `SELECT 1
      WHERE EXISTS(SELECT 1 FROM articles WHERE cover_url=? OR instr(content_html, ?) > 0)
         OR EXISTS(SELECT 1 FROM events WHERE banner_url=? OR instr(content_html, ?) > 0)
-        OR EXISTS(SELECT 1 FROM event_map_settings WHERE image_url=?)`,
+        OR EXISTS(SELECT 1 FROM event_map_settings WHERE image_url=?)
+        OR EXISTS(SELECT 1 FROM event_map_snapshots WHERE instr(snapshot_json, ?) > 0)`,
   );
   const remove = db.prepare("DELETE FROM uploaded_assets WHERE file_url=?");
   for (const { file_url: url } of candidates) {
-    if (referenced.get(url, url, url, url, url)) continue;
+    if (referenced.get(url, url, url, url, url, url)) continue;
     const target = localUploadPath(url);
     if (target) {
       try {

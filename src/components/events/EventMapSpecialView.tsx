@@ -2,25 +2,38 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { EventArticleDirectory } from "@/components/EventArticleDirectory";
 import { ImageMapViewer } from "@/components/maps/ImageMapViewer";
+import { EventMapSnapshotSelector } from "@/components/maps/EventMapSnapshotSelector";
 import { cleanHtml, formatMonth } from "@/lib/content";
 import { eventGroupLabel } from "@/lib/event-groups";
 import type { EventMapSettings } from "@/lib/event-map-settings";
 import { getEventMapNodes } from "@/lib/event-map-nodes";
 import { getEventMapRegions } from "@/lib/event-map-regions";
 import { getEventMapRelations } from "@/lib/event-map-relations";
+import { getEventMapSnapshot, getEventMapSnapshots } from "@/lib/event-map-snapshots";
 import { eventStatus, getArticlesByEvent, getEventDocuments, type Event } from "@/lib/queries";
 import { getCurrentUser, userCanPublishContent } from "@/lib/user-auth";
 
 const labels = { active: "进行中", upcoming: "即将开始", ended: "已经结束" };
 
-export async function EventMapSpecialView({ event, map }: { event: Event; map: EventMapSettings }) {
+export async function EventMapSpecialView({
+  event,
+  map,
+  snapshotId,
+}: {
+  event: Event;
+  map: EventMapSettings;
+  snapshotId?: number;
+}) {
   const status = eventStatus(event);
   const articles = getArticlesByEvent(event.id);
   const documents = getEventDocuments(event.id);
-  const nodes = getEventMapNodes(event.id);
-  const regions = getEventMapRegions(event.id);
-  const relations = getEventMapRelations(event.id);
-  const user = await getCurrentUser();
+  const snapshot = snapshotId ? getEventMapSnapshot(event.id, snapshotId) : undefined;
+  const snapshots = getEventMapSnapshots(event.id);
+  const nodes = snapshot?.nodes || getEventMapNodes(event.id);
+  const regions = snapshot?.regions || getEventMapRegions(event.id);
+  const relations = snapshot?.relations || getEventMapRelations(event.id);
+  const displayMap = snapshot?.map || map;
+  const user = snapshot ? undefined : await getCurrentUser();
   const mapUser = user
     ? {
         id: user.id,
@@ -71,18 +84,33 @@ export async function EventMapSpecialView({ event, map }: { event: Event; map: E
                 {map.map_eyebrow ? <p>{map.map_eyebrow}</p> : null}
                 <h2>{map.map_section_title}</h2>
               </div>
-              <Link href={`/events/${event.slug}/map`}>在独立页面打开</Link>
+              <Link
+                href={
+                  snapshot
+                    ? `/events/${event.slug}/map?snapshot=${snapshot.id}`
+                    : `/events/${event.slug}/map`
+                }
+              >
+                在独立页面打开
+              </Link>
             </div>
+            <EventMapSnapshotSelector
+              snapshots={snapshots}
+              selectedSnapshot={snapshot}
+              basePath={`/events/${event.slug}`}
+              anchor="#world-map"
+            />
             <ImageMapViewer
-              src={map.image_url}
-              alt={map.image_alt}
-              width={map.image_width}
-              height={map.image_height}
-              eventId={event.id}
+              key={snapshot ? `snapshot-${snapshot.id}` : "current"}
+              src={displayMap.image_url}
+              alt={displayMap.image_alt}
+              width={displayMap.image_width}
+              height={displayMap.image_height}
+              eventId={snapshot ? undefined : event.id}
               initialNodes={nodes}
               initialRegions={regions}
               initialRelations={relations}
-              currentUser={mapUser}
+              currentUser={snapshot ? undefined : mapUser}
               loginPath={`/login?next=${encodeURIComponent(`/events/${event.slug}#world-map`)}`}
             />
           </section>

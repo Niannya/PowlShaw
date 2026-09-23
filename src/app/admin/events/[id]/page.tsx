@@ -4,10 +4,12 @@ import { EventForm } from "@/components/admin/EventForm";
 import { EventArticleManager } from "@/components/admin/EventArticleManager";
 import { EventDocumentManager } from "@/components/admin/EventDocumentManager";
 import { EventMapSettingsForm } from "@/components/admin/EventMapSettingsForm";
+import { EventMapSnapshotManager } from "@/components/admin/EventMapSnapshotManager";
 import { requireAdmin } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import type { EventDocumentRecord } from "@/lib/event-documents";
 import { getEventMapSettings } from "@/lib/event-map-settings";
+import { getEventMapSnapshots } from "@/lib/event-map-snapshots";
 
 export default async function EditEvent({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -42,13 +44,28 @@ export default async function EditEvent({ params }: { params: Promise<{ id: stri
     )
     .all(id) as EventDocumentRecord[];
   const mapSettings = getEventMapSettings(id);
+  const mapSnapshots = mapSettings ? getEventMapSnapshots(id) : [];
+  const snapshotDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 
   return (
     <AdminShell>
       <h1>编辑活动</h1>
       <EventForm initial={event} />
       {mapSettings ? (
-        <EventMapSettingsForm eventId={id} eventSlug={String(event.slug)} initial={mapSettings} />
+        <>
+          <EventMapSettingsForm eventId={id} eventSlug={String(event.slug)} initial={mapSettings} />
+          <EventMapSnapshotManager
+            eventId={id}
+            eventSlug={String(event.slug)}
+            initialDate={snapshotDate}
+            initialSnapshots={mapSnapshots}
+          />
+        </>
       ) : null}
       <EventDocumentManager eventId={id} initialDocuments={initialDocuments} />
       <EventArticleManager

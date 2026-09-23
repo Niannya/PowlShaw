@@ -130,6 +130,46 @@
 .event-map-entry .old-button {
   margin-top: 0;
 }
+.world-map-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  color: #41372c;
+  background: #fff3bb;
+  border: 1px dotted #8b744c;
+  font-size: 13px;
+}
+.world-map-timeline label {
+  display: grid;
+  flex: 0 1 360px;
+  gap: 3px;
+  font-weight: bold;
+}
+.world-map-timeline select {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 7px;
+  color: #2e2a25;
+  background: #fffef7;
+  border: 1px solid #8d7e65;
+  border-radius: 0;
+  font: inherit;
+  font-weight: normal;
+}
+.world-map-timeline div {
+  flex: 1 1 320px;
+  text-align: right;
+}
+.world-map-timeline p {
+  margin: 2px 0;
+  white-space: pre-wrap;
+}
+.world-map-timeline small {
+  color: #6d6254;
+}
 .world-map-viewer {
   border: 1px dotted #42596f;
   background: rgba(255, 253, 244, 0.94);

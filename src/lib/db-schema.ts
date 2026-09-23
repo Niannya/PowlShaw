@@ -174,6 +174,18 @@ export function migrate(db: Database.Database) {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- 管理员手动保存的世界状态。完整 JSON 副本保证后续编辑不会改写历史。
+    CREATE TABLE IF NOT EXISTS event_map_snapshots (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      snapshot_date TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      snapshot_json TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (event_id, snapshot_date)
+    );
+
     CREATE TABLE IF NOT EXISTS pages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       legacy_id INTEGER UNIQUE,
@@ -352,6 +364,8 @@ export function migrate(db: Database.Database) {
       ON event_map_regions(event_id, deleted_at, created_at);
     CREATE INDEX IF NOT EXISTS idx_event_map_regions_user
       ON event_map_regions(user_id, deleted_at);
+    CREATE INDEX IF NOT EXISTS idx_event_map_snapshots_event
+      ON event_map_snapshots(event_id, snapshot_date DESC, id DESC);
     CREATE INDEX IF NOT EXISTS idx_comments_article_status_date
       ON comments(article_id, status, created_at);
     CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);

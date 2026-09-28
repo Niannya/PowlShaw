@@ -100,6 +100,18 @@ pnpm dev
 初始化后，可以在后台“后台安全”页面修改管理员密码；新密码只保存加密哈希，无需再编辑
 `.env.local`。
 
+使用不含管理员凭据的公开内容数据库时，先在 `.env.local` 设置接收者自己的
+`ADMIN_USERNAME` 和 `ADMIN_PASSWORD`，再执行：
+
+```powershell
+pnpm admin:reset
+```
+
+命令会先在数据库同级的 `backups/` 目录中创建备份，然后重置管理员凭据并使旧会话失效。
+密码不要作为命令行参数传入，也不要写入 URL。
+
+服务器更新、Nginx 配置和上线验证步骤见 [`SERVER_DEPLOYMENT.md`](SERVER_DEPLOYMENT.md)。
+
 ## 本地资料导入
 
 本地维护环境可以从 `破晓相关/破晓相关/` 整理第一届至第九届“破晓”及同期写作活动。

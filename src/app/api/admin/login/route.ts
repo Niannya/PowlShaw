@@ -1,4 +1,4 @@
-import { credentialsAreValid, setSessionCookie } from "@/lib/auth";
+import { adminCredentialsAreConfigured, credentialsAreValid, setSessionCookie } from "@/lib/auth";
 import { checkLoginLimit, clearLoginFailures, recordLoginFailure } from "@/lib/user-auth";
 
 function redirectTo(path: string) {
@@ -13,6 +13,10 @@ export async function POST(request: Request) {
     ? Object.fromEntries(await request.formData())
     : ((await request.json().catch(() => ({}))) as Record<string, unknown>);
   const username = String(body.username || "").slice(0, 64);
+  if (!adminCredentialsAreConfigured()) {
+    if (isFormSubmission) return redirectTo("/admin/login?error=not-configured");
+    return Response.json({ error: "服务器尚未初始化后台账号。" }, { status: 503 });
+  }
   const limit = checkLoginLimit(username, request, "admin-login");
   if (!limit.allowed) {
     if (isFormSubmission) return redirectTo("/admin/login?error=rate-limit");

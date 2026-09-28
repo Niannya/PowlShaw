@@ -7,6 +7,7 @@ import { requestIsHttps } from "@/lib/request-security";
 
 const COOKIE_NAME = "poxiao_admin";
 const SESSION_SECONDS = 60 * 60 * 12;
+const ADMIN_PASSWORD_PLACEHOLDERS = new Set(["replace-with-a-strong-password", "ci-only-password"]);
 
 type AdminCredentials = {
   username: string;
@@ -37,8 +38,16 @@ function readAdminCredentials() {
 
   if (!credentials) {
     const initialPassword = process.env.ADMIN_PASSWORD || "";
-    if (!initialPassword) return undefined;
-    const initialUsername = process.env.ADMIN_USERNAME || "admin";
+    const initialUsername = (process.env.ADMIN_USERNAME || "admin").trim();
+    if (
+      !initialUsername ||
+      initialUsername.length > 64 ||
+      initialPassword.length < 8 ||
+      initialPassword.length > 200 ||
+      ADMIN_PASSWORD_PLACEHOLDERS.has(initialPassword)
+    ) {
+      return undefined;
+    }
     db.prepare(
       `INSERT OR IGNORE INTO admin_credentials(id, username, password_hash)
        VALUES (1, ?, ?)`,
@@ -52,6 +61,10 @@ function readAdminCredentials() {
   }
 
   return credentials;
+}
+
+export function adminCredentialsAreConfigured() {
+  return Boolean(readAdminCredentials());
 }
 
 function safeTextEqual(left: string, right: string) {

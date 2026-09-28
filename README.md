@@ -26,13 +26,11 @@
 - 图片上传（JPG、PNG、GIF、WebP，最大 5MB）
 - 桌面端和移动端响应式布局
 
-## 日常维护
-
-不熟悉代码时，请先阅读 [`MAINTENANCE.md`](MAINTENANCE.md)。需要逐个了解源码文件时，
-参阅 [`SRC_FILE_GUIDE.md`](SRC_FILE_GUIDE.md)。
+## 开发与维护
 
 全站基础配色在 `src/styles/base.css`；页面样式按用途放在 `src/styles/`，
-`src/app/globals.css` 只负责按顺序引入，详细说明见 [`MAINTENANCE.md`](MAINTENANCE.md)。
+`src/app/globals.css` 只负责按顺序引入。首页欢迎语、公告、文章、活动、评论账号与评论
+均通过后台维护，无需直接修改数据库。
 
 ## 项目结构
 
@@ -140,7 +138,7 @@ pnpm db:import-activities
 
 ## GitHub 公开边界
 
-公开仓库只包含程序代码、测试、维护文档和必要的静态素材。下列内容只保留在本地或部署环境：
+公开仓库只包含程序代码、测试、项目说明和必要的静态素材。下列内容只保留在本地或部署环境：
 
 - `.env.local` 及其他真实环境变量；
 - `data/` 中的数据库、备份、导入报告和私密归档；

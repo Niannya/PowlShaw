@@ -3,6 +3,7 @@ node_modules/
 .next/
 .next-stale-*/
 .pnpm-store/
+next-env.d.ts
 *.tsbuildinfo
 
 # Local environment and secrets

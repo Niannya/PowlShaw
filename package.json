@@ -12,7 +12,7 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "check": "pnpm -r check",
+    "check": "pnpm format:check && pnpm -r check",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "release:check": "python apps/api/scripts/check_public_release.py"

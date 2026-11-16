@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { ApiError } from "@/lib/api/errors";
 import { apiServer } from "@/lib/api/server";
 import type {
   AdminArticleListPayload,
@@ -52,8 +53,9 @@ export async function getAdminArticleList(params: {
 export async function getAdminArticle(id: number): Promise<AdminArticlePayload | undefined> {
   try {
     return await apiServer<AdminArticlePayload>(`/admin/articles/${id}`);
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return undefined;
+    throw error;
   }
 }
 
@@ -71,8 +73,9 @@ export async function getAdminEventDetail(
 ): Promise<AdminEventDetailPayload | undefined> {
   try {
     return await apiServer<AdminEventDetailPayload>(`/admin/events/${id}`);
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return undefined;
+    throw error;
   }
 }
 

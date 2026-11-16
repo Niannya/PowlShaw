@@ -27,6 +27,7 @@ sqlite3 已满足。
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -40,6 +41,15 @@ try:
     sys.stderr.reconfigure(encoding="utf-8")
 except Exception:  # pragma: no cover - 仅影响旧环境
     pass
+
+MAP_TABLES = [
+    "event_map_settings",
+    "event_map_nodes",
+    "event_map_node_articles",
+    "event_map_relations",
+    "event_map_regions",
+    "event_map_snapshots",
+]
 
 DROP_TABLES = [
     "uploaded_assets",
@@ -187,6 +197,28 @@ def delete_image_documents(conn: sqlite3.Connection) -> int:
     return cursor.rowcount
 
 
+def archive_map_tables(conn: sqlite3.Connection, archive_path: str | None) -> str | None:
+    """在删除 6 张地图表前把它们导出为 JSON，满足方案里“迁移前可归档”的要求。"""
+    if not archive_path:
+        return None
+    existing = table_names(conn)
+    payload: dict[str, list[dict[str, object]]] = {}
+    for table in MAP_TABLES:
+        if table not in existing:
+            continue
+        columns = [row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()]
+        rows = conn.execute(f"SELECT * FROM {table}").fetchall()
+        payload[table] = [dict(zip(columns, row)) for row in rows]
+    if not payload:
+        return None
+    archive_path = os.path.abspath(archive_path)
+    os.makedirs(os.path.dirname(archive_path) or ".", exist_ok=True)
+    with open(archive_path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
+    return archive_path
+
+
 def drop_legacy_tables(conn: sqlite3.Connection) -> list[str]:
     existing = table_names(conn)
     dropped = []
@@ -285,6 +317,11 @@ def main() -> int:
         help="导出的 Turso 导入 SQL 路径（默认 powlshaw_turso.sql）",
     )
     parser.add_argument("--keep-documents", action="store_true", help="保留 event_documents 中的图片记录")
+    parser.add_argument(
+        "--archive-maps",
+        action="store_true",
+        help="删除地图表前导出 <out>.maps.json（归档列国纪数据）",
+    )
     args = parser.parse_args()
 
     source = os.path.abspath(args.db)
@@ -302,6 +339,9 @@ def main() -> int:
 
             conn.execute("PRAGMA foreign_keys=OFF")
             conn.execute("BEGIN")
+            map_archive = archive_map_tables(
+                conn, f"{os.path.abspath(args.out)}.maps.json" if args.archive_maps else None
+            )
             changed_rows = strip_embedded_images(conn)
             deleted_images = 0 if args.keep_documents else delete_image_documents(conn)
             dropped = drop_legacy_tables(conn)
@@ -320,6 +360,7 @@ def main() -> int:
             print(f"  正文去图行数      : {changed_rows}")
             print(f"  删除图片附件记录  : {deleted_images}")
             print(f"  删除废弃表        : {len(dropped)} {', '.join(dropped) if dropped else ''}")
+            print(f"  地图归档          : {map_archive or '未启用（--archive-maps）'}")
             print(f"  删除图片列        : {', '.join(removed_columns) or '无'}")
             print(f"  新增主题列        : {', '.join(added_columns) or '无'}")
             print(f"  重建修订表        : {'是' if revisions_rebuilt else '否（已兼容）'}")

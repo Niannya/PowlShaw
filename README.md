@@ -1,6 +1,8 @@
 # 破晓作品档案
 
-“破晓”是一个独立实现的前后端文章展示网站。公开页面采用老式个人主页美学，后台提供文章、活动、受邀账号和评论管理。
+“破晓”是一个独立实现的文章展示网站。公开页面采用老式个人主页美学，后台提供文章、活动、受邀账号和评论管理。
+
+> **当前分支（`feat/frontend-extraction`）**：前端已经剥离为独立的 Next.js 应用 `apps/web`，只通过 `/api/v1` 与后端 `apps/api` 通信，不再直接访问 SQLite 或读取服务端会话。设计与改造细节见 [`docs/frontend-extraction.md`](docs/frontend-extraction.md)，接口契约见 [`docs/api/openapi.yaml`](docs/api/openapi.yaml)。
 
 ## 已实现
 
@@ -26,68 +28,49 @@
 - 图片上传（JPG、PNG、GIF、WebP，最大 5MB）
 - 桌面端和移动端响应式布局
 
-## 开发与维护
-
-全站基础配色在 `src/styles/base.css`；页面样式按用途放在 `src/styles/`，
-`src/app/globals.css` 只负责按顺序引入。首页欢迎语、公告、文章、活动、评论账号与评论
-均通过后台维护，无需直接修改数据库。
-
 ## 项目结构
 
 ```text
-src/
-  app/
-    (site)/           公开页面（路径中不含「site」）
-    admin/            后台页面
-    api/              后端接口
-    globals.css       全站样式入口，按顺序加载 src/styles/
-  components/
-    account/          登录和账号组件
-    admin/            后台表单、编辑器与草稿逻辑
-    comments/         评论组件
-    *.tsx             前台共用组件
-  lib/
-    db.ts             数据库连接入口
-    db-schema.ts      建表、兼容旧数据库的增量迁移
-    queries.ts        公开页面查询
-    *.ts              登录、权限、内容处理等逻辑
-  styles/             基础、前台内容、评论、后台和响应式样式
-scripts/             可选的资料导入与整理脚本
-tests/               可直接运行的轻量回归测试
-public/uploads/      后台上传的附件
-data/poxiao.db        本地 SQLite 数据库（不提交）
+apps/
+  web/                      # 前端：Next.js SSR，只调用 /api/v1
+    src/app/                # (site) 公开页、admin 后台页
+    src/components/         # 展示与交互组件
+    src/lib/api/            # 服务端/浏览器 API client、DTO、错误类型
+    src/lib/                # 页面使用的数据适配与纯函数
+    src/styles/             # 基础、内容、评论、后台与响应式样式
+    public/assets/          # 站点静态素材
+    tests/                  # 前端轻量回归测试
+  api/                      # 后端：Next Route Handlers + SQLite
+    src/app/api/v1/         # 全部接口（版本化）
+    src/app/uploads/        # 活动资料下载
+    src/lib/                # 查询、鉴权、校验、地图、文档等领域逻辑
+    scripts/                # 资料导入、管理员重置、开发种子数据
+    public/uploads/         # 后台上传的附件
+    data/poxiao.db          # 本地 SQLite 数据库（不提交）
+    tests/                  # 后端回归测试
+docs/
+  frontend-extraction.md    # 前端剥离说明与验证结果
+  api/openapi.yaml          # /api/v1 契约
+infra/
+  nginx.conf.example        # 同源反代示例
 ```
 
-修改页面固定文字时直接编辑相应的 `page.tsx` 或组件；首页欢迎语和公告仍在后台编辑。
-只改界面请从相应的 `src/styles/` 文件入手。不要手动修改 `data/poxiao.db`。
+前端数据流只有一个入口：`apps/web/src/lib/api/server.ts`（RSC，转发 Cookie）与 `apps/web/src/lib/api/client.ts`（浏览器，同源 `/api/v1`）。页面不再 import `@/lib/db`、`better-sqlite3` 或服务端会话实现。
 
-修改代码后可运行：
+## 开发与维护
 
-```powershell
-pnpm check
-pnpm build
-```
+全站基础配色在 `apps/web/src/styles/base.css`；页面样式按用途放在 `apps/web/src/styles/`，`apps/web/src/app/globals.css` 只负责按顺序引入。首页欢迎语、公告、文章、活动、评论账号与评论均通过后台维护，无需直接修改数据库。
 
-重新整理本地活动资料中的评议文件时，先用
-`python scripts/import_event_documents.py --dry-run --list` 核对清单，再运行
-`pnpm db:import-event-documents`。脚本只复制评议及相关活动资料，不会改动原始目录，
-运行前会备份数据库。
-
-## 技术结构
-
-- Next.js 16 App Router
-- React 19 + TypeScript
-- Next.js Route Handlers 后端 API
-- SQLite 本地数据库（better-sqlite3）
-- 原生 CSS 复古视觉
-
-## 本地运行
-
-```powershell
+```bash
 pnpm install
-Copy-Item .env.example .env.local
-# 编辑 .env.local，设置强密码和至少 32 字符的 SESSION_SECRET
-pnpm dev
+cp apps/api/.env.example apps/api/.env.local
+cp apps/web/.env.example apps/web/.env.local
+# 编辑 apps/api/.env.local：ADMIN_PASSWORD、至少 32 字符的 SESSION_SECRET
+
+pnpm dev          # 同时启动 3001（api）与 3000（web）
+# 或
+pnpm dev:api
+pnpm dev:web
 ```
 
 访问：
@@ -95,20 +78,49 @@ pnpm dev
 - 网站：`http://localhost:3000`
 - 后台：`http://localhost:3000/admin`
 - 评论账号登录：`http://localhost:3000/login`
+- 接口：`http://localhost:3001/api/v1/health`
 
-`.env.local` 含初始化管理密码和会话密钥，已被 `.gitignore` 排除，不应提交或公开。数据库首次
-初始化后，可以在后台“后台安全”页面修改管理员密码；新密码只保存加密哈希，无需再编辑
-`.env.local`。
+开发模式下浏览器请求 `/api/v1` 与 `/uploads` 由 `apps/web/next.config.ts` 的 rewrites 转发到 `http://127.0.0.1:3001`。
 
-使用不含管理员凭据的公开内容数据库时，先在 `.env.local` 设置接收者自己的
-`ADMIN_USERNAME` 和 `ADMIN_PASSWORD`，再执行：
+修改代码后可运行：
 
-```powershell
-pnpm admin:reset
+```bash
+pnpm check       # 两个应用的 lint + typecheck + test
+pnpm build       # 两个应用的 next build
 ```
 
-命令会先在数据库同级的 `backups/` 目录中创建备份，然后重置管理员凭据并使旧会话失效。
-密码不要作为命令行参数传入，也不要写入 URL。
+只改界面请从 `apps/web/src/styles/` 或对应组件入手。不要手动修改 `apps/api/data/poxiao.db`。
+
+重新整理本地活动资料中的评议文件时，先用
+`python apps/api/scripts/import_event_documents.py --dry-run --list` 核对清单，再运行
+`pnpm --filter @powlshaw/api db:import-event-documents`。脚本只复制评议及相关活动资料，不会改动原始目录，运行前会备份数据库。
+
+## 技术结构
+
+- Next.js 16 App Router
+- React 19 + TypeScript
+- 前端与后端拆分为两个独立 Next.js 应用（`apps/web` / `apps/api`）
+- 后端使用 Next.js Route Handlers + SQLite（better-sqlite3）
+- 原生 CSS 复古视觉
+
+## 本地运行
+
+`.env.local` 含初始化管理密码和会话密钥，已被 `.gitignore` 排除，不应提交或公开。数据库首次初始化后，可以在后台“后台安全”页面修改管理员密码；新密码只保存加密哈希，无需再编辑 `.env.local`。
+
+使用不含管理员凭据的公开内容数据库时，先在 `apps/api/.env.local` 设置接收者自己的 `ADMIN_USERNAME` 和 `ADMIN_PASSWORD`，再执行：
+
+```bash
+pnpm --filter @powlshaw/api admin:reset
+```
+
+命令会先在数据库同级的 `backups/` 目录中创建备份，然后重置管理员凭据并使旧会话失效。密码不要作为命令行参数传入，也不要写入 URL。
+
+需要演示数据时可以写入一个可丢弃的 seed 数据库：
+
+```bash
+# 先启动一次 API，让 SQLite 完成建表
+DATABASE_PATH=data/seed.db pnpm --filter @powlshaw/api seed:dev
+```
 
 服务器更新、Nginx 配置和上线验证步骤见 [`SERVER_DEPLOYMENT.md`](SERVER_DEPLOYMENT.md)。
 
@@ -121,49 +133,48 @@ pnpm admin:reset
 批量整理脚本和导入报告分别位于：
 
 ```text
-scripts/import_remaining_activities.py
+apps/api/scripts/import_remaining_activities.py
 破晓相关/整理输出/其余活动-导入报告.md
 ```
 
 脚本会保留原目录层级、提取文档正文和图片，不在文末添加下载链接；评议表、统计表和
-活动管理资料不会作为作品导入。旧的原始文档公开副本已移至 `data/private-archive-files/`。
+活动管理资料不会作为作品导入。旧的原始文档公开副本已移至 `apps/api/data/private-archive-files/`。
 重复运行会更新这些导入文章，不会重复创建；旧版 `.doc`、`.rtf` 的转换
 需要本机安装 Microsoft Word，PDF 文字提取需要先安装：
 
-```powershell
-python -m pip install -r scripts/requirements-activities.txt
-pnpm db:import-activities
+```bash
+python -m pip install -r apps/api/scripts/requirements-activities.txt
+pnpm --filter @powlshaw/api db:import-activities
 ```
 
 ## 上线前
 
-1. 修改 `.env.local` 中的管理密码和会话密钥。
-2. 把 `data/` 和 `public/uploads/` 放在持久化磁盘，并纳入定时备份。
-3. 使用反向代理启用 HTTPS。
-4. 设置正式的 `NEXT_PUBLIC_SITE_URL`。
-5. 执行 `pnpm build` 后以 `pnpm start` 运行。
+1. 修改 `apps/api/.env.local` 中的管理密码和会话密钥。
+2. 把 `apps/api/data/` 和 `apps/api/public/uploads/` 放在持久化磁盘，并纳入定时备份。
+3. 使用反向代理启用 HTTPS，并同时转发 `/api/v1`、`/uploads` 与 `/`。
+4. 设置正式的 `NEXT_PUBLIC_SITE_URL`（前端）与 `TRUST_PROXY_HEADERS=1`（后端，仅在可信代理后）。
+5. 执行 `pnpm build` 后分别以 `pnpm --filter @powlshaw/api start`、`pnpm --filter @powlshaw/web start` 运行。
 6. 根据服务器所在地完成相应备案和合规工作。
 
 ## 数据说明
 
-网站正文保存在 `data/poxiao.db`，后台上传的图片保存在 `public/uploads/`。这两个位置需要一起备份。
+网站正文保存在 `apps/api/data/poxiao.db`，后台上传的图片保存在 `apps/api/public/uploads/`。这两个位置需要一起备份。
 
 ## GitHub 公开边界
 
 公开仓库只包含程序代码、测试、项目说明和必要的静态素材。下列内容只保留在本地或部署环境：
 
 - `.env.local` 及其他真实环境变量；
-- `data/` 中的数据库、备份、导入报告和私密归档；
-- `public/uploads/` 中的用户上传内容；
+- `apps/api/data/` 中的数据库、备份、导入报告和私密归档；
+- `apps/api/public/uploads/` 中的用户上传内容；
 - `破晓相关/` 和 `破晓相关.zip` 等原始资料。
 
 首次提交或推送前运行：
 
-```powershell
-pnpm release:check
+```bash
+pnpm release:check   # 需要 Python
 pnpm check
 pnpm build
 ```
 
-`release:check` 按 Git 的实际忽略规则检查候选文件，发现数据库、私密资料、真实凭据或用户目录
-绝对路径时会失败。
+`release:check` 按 Git 的实际忽略规则检查候选文件，发现数据库、私密资料、真实凭据或用户目录绝对路径时会失败。

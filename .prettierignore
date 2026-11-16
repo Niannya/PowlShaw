@@ -1,9 +1,13 @@
 node_modules/
 .next/
+apps/*/.next/
 .next-stale-*/
+apps/*/.next-stale-*/
 .pnpm-store/
 data/
+apps/*/data/
 public/uploads/
+apps/*/public/uploads/
 破晓相关/
 .env*
 *.xml

@@ -2,22 +2,28 @@
 node_modules/
 .next/
 .next-stale-*/
+apps/*/.next/
+apps/*/.next-stale-*/
 .pnpm-store/
 next-env.d.ts
+apps/*/next-env.d.ts
 *.tsbuildinfo
 
 # Local environment and secrets
 .env
 .env.*
 !.env.example
+apps/*/.env
+apps/*/.env.*
+!apps/*/.env.example
 *.pem
 *.key
 
 # Runtime databases, user uploads, backups, and import reports
-data/*
-!data/.gitkeep
-public/uploads/*
-!public/uploads/.gitkeep
+apps/*/data/*
+!apps/*/data/.gitkeep
+apps/*/public/uploads/*
+!apps/*/public/uploads/.gitkeep
 *.db
 *.db-*
 

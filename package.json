@@ -1,48 +1,24 @@
 {
-  "name": "poxiao-archive",
-  "version": "0.1.0",
+  "name": "powlshaw",
+  "version": "0.2.0",
   "private": true,
-  "type": "module",
+  "packageManager": "pnpm@11.19.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint .",
-    "test": "node --test",
-    "typecheck": "tsc --noEmit",
+    "dev": "pnpm --parallel --filter @powlshaw/api --filter @powlshaw/web dev",
+    "dev:api": "pnpm --filter @powlshaw/api dev",
+    "dev:web": "pnpm --filter @powlshaw/web dev",
+    "build": "pnpm -r build",
+    "start": "pnpm --parallel --filter @powlshaw/api --filter @powlshaw/web start",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "check": "pnpm -r check",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
-    "release:check": "python scripts/check_public_release.py",
-    "admin:reset": "node scripts/reset_admin_credentials.mjs",
-    "db:import-activities": "python scripts/import_remaining_activities.py",
-    "db:import-event-documents": "python scripts/import_event_documents.py",
-    "db:migrate-slugs": "node scripts/migrate_url_slugs.mjs --execute"
-  },
-  "dependencies": {
-    "@next/env": "16.3.4",
-    "better-sqlite3": "13.0.3",
-    "dompurify": "^3.4.15",
-    "mammoth": "^1.12.2",
-    "marked": "^18.0.13",
-    "next": "16.3.4",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "sanitize-html": "2.17.7",
-    "turndown": "^7.2.4",
-    "zod": "4.5.4"
+    "release:check": "python apps/api/scripts/check_public_release.py"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "9.6.0",
-    "@types/node": "^24.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@types/sanitize-html": "^2.16.0",
-    "@types/turndown": "^5.0.6",
-    "eslint": "^9.0.0",
-    "eslint-config-next": "16.3.4",
-    "prettier": "^3.9.6",
-    "typescript": "^5.9.0"
-  },
-  "packageManager": "pnpm@11.19.0"
+    "next": "16.3.4",
+    "prettier": "^3.9.6"
+  }
 }

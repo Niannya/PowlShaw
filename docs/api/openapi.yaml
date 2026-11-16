@@ -1,0 +1,764 @@
+openapi: 3.0.3
+info:
+  title: PowlShaw API
+  version: 0.2.0
+  description: |
+    `apps/api` 提供的版本化接口。前端（`apps/web`）只通过 `/api/v1` 访问本服务。
+
+    - 新只读端点返回 `{ "data": ... }`。
+    - 新只读端点错误返回 `{ "error": { "code", "message", "details"? } }`。
+    - 早期写入端点（登录、评论、后台 CRUD）仍返回 `{ "error": "文案" }`，前端错误适配器同时兼容。
+    - 会话由本服务通过 HttpOnly Cookie 设置：`poxiao_user`（普通账号）、`poxiao_admin`（管理员）。
+servers:
+  - url: http://localhost:3001/api/v1
+    description: 本地开发
+  - url: https://example.com/api/v1
+    description: 同源反向代理
+tags:
+  - name: site
+  - name: articles
+  - name: events
+  - name: account
+  - name: admin
+  - name: mutations
+components:
+  securitySchemes:
+    userCookie:
+      type: apiKey
+      in: cookie
+      name: poxiao_user
+    adminCookie:
+      type: apiKey
+      in: cookie
+      name: poxiao_admin
+  schemas:
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: ARTICLE_NOT_FOUND
+            message:
+              type: string
+              example: 文章不存在。
+            details:
+              nullable: true
+    LegacyError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: 请先登录。
+    ArticleListItem:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        title: { type: string }
+        excerpt: { type: string }
+        published_at: { type: string, nullable: true }
+        cover_url: { type: string, nullable: true }
+        is_pinned: { type: integer, enum: [0, 1] }
+        event_section_path: { type: string }
+    Article:
+      allOf:
+        - $ref: "#/components/schemas/ArticleListItem"
+        - type: object
+          properties:
+            content_html: { type: string }
+            status: { type: string, enum: [draft, published] }
+            comments_mode: { type: string, enum: [open, closed, hidden] }
+            events:
+              type: array
+              items: { $ref: "#/components/schemas/Event" }
+    Event:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        title: { type: string }
+        event_group: { type: string, enum: [poxiao, other] }
+        summary: { type: string }
+        content_html: { type: string }
+        starts_at: { type: string, nullable: true }
+        ends_at: { type: string, nullable: true }
+        status_override:
+          type: string
+          nullable: true
+          enum: [upcoming, active, ended, null]
+        banner_url: { type: string, nullable: true }
+        is_featured: { type: integer, enum: [0, 1] }
+        sort_order: { type: integer }
+        article_count: { type: integer }
+    Comment:
+      type: object
+      properties:
+        id: { type: integer }
+        article_id: { type: integer }
+        user_id: { type: integer }
+        parent_id: { type: integer, nullable: true }
+        content: { type: string }
+        status: { type: string, enum: [visible, hidden] }
+        is_pinned: { type: integer, enum: [0, 1] }
+        edited_at: { type: string, nullable: true }
+        deleted_at: { type: string, nullable: true }
+        deleted_by: { type: string, nullable: true, enum: [user, admin, null] }
+        created_at: { type: string }
+        display_name: { type: string }
+        username: { type: string }
+        replies:
+          type: array
+          items: { $ref: "#/components/schemas/Comment" }
+    CommentsPage:
+      type: object
+      properties:
+        comments:
+          type: array
+          items: { $ref: "#/components/schemas/Comment" }
+        page: { type: integer }
+        pages: { type: integer }
+        totalComments: { type: integer }
+        sort: { type: string, enum: [oldest, newest] }
+    PublicUser:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        display_name: { type: string }
+        is_active: { type: integer }
+        must_change_password: { type: integer }
+        session_version: { type: integer }
+        muted_until: { type: string, nullable: true }
+        mute_reason: { type: string }
+    SiteSettings:
+      type: object
+      additionalProperties: { type: string }
+    SitePayload:
+      type: object
+      properties:
+        settings: { $ref: "#/components/schemas/SiteSettings" }
+        archiveYears:
+          type: array
+          items:
+            type: object
+            properties:
+              year: { type: string }
+              count: { type: integer }
+        lastPublicUpdate: { type: string, nullable: true }
+    MePayload:
+      type: object
+      properties:
+        user:
+          allOf:
+            - $ref: "#/components/schemas/PublicUser"
+          nullable: true
+        unreadNotifications: { type: integer }
+    ArticlePage:
+      type: object
+      properties:
+        article: { $ref: "#/components/schemas/Article" }
+        neighbors:
+          type: object
+          properties:
+            previous: { $ref: "#/components/schemas/ArticleListItem" }
+            next: { $ref: "#/components/schemas/ArticleListItem" }
+        comments: { $ref: "#/components/schemas/CommentsPage" }
+    EventMapSettings:
+      type: object
+      additionalProperties: true
+      properties:
+        event_id: { type: integer }
+        is_enabled: { type: integer }
+        map_title: { type: string }
+        map_description: { type: string }
+        image_url: { type: string }
+        image_alt: { type: string }
+        image_width: { type: integer }
+        image_height: { type: integer }
+    EventMapSnapshot:
+      type: object
+      additionalProperties: true
+      properties:
+        id: { type: integer }
+        event_id: { type: integer }
+        snapshot_date: { type: string }
+        title: { type: string }
+        description: { type: string }
+        map: { type: object }
+        nodes: { type: array, items: { type: object } }
+        regions: { type: array, items: { type: object } }
+        relations: { type: array, items: { type: object } }
+    EventPage:
+      type: object
+      properties:
+        event: { $ref: "#/components/schemas/Event" }
+        map:
+          allOf:
+            - $ref: "#/components/schemas/EventMapSettings"
+          nullable: true
+        documents:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              display_name: { type: string }
+              context_label: { type: string }
+              file_url: { type: string }
+              file_size: { type: integer }
+        articles:
+          type: array
+          items: { $ref: "#/components/schemas/ArticleListItem" }
+        snapshots:
+          type: array
+          items: { $ref: "#/components/schemas/EventMapSnapshot" }
+        snapshot:
+          allOf:
+            - $ref: "#/components/schemas/EventMapSnapshot"
+          nullable: true
+        nodes: { type: array, items: { type: object } }
+        regions: { type: array, items: { type: object } }
+        relations: { type: array, items: { type: object } }
+    AdminSession:
+      type: object
+      properties:
+        authenticated: { type: boolean }
+        credentialsConfigured: { type: boolean }
+        username: { type: string }
+    DataEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: {}
+paths:
+  /health:
+    get:
+      tags: [site]
+      summary: 健康检查
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status: { type: string, example: ok }
+                      service: { type: string, example: powlshaw-api }
+  /site:
+    get:
+      tags: [site]
+      summary: 站点设置、文章年份与最近公开更新时间
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/SitePayload" }
+  /me:
+    get:
+      tags: [account]
+      summary: 当前普通账号与未读通知数
+      responses:
+        "200":
+          description: 未登录时 user 为 null
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/MePayload" }
+  /me/notifications:
+    get:
+      tags: [account]
+      summary: 当前账号最近 100 条提及/回复通知
+      security:
+        - userCookie: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { type: object }
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiError" }
+  /articles:
+    get:
+      tags: [articles]
+      summary: 文章列表、搜索或按年份筛选
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: perPage, schema: { type: integer, default: 30, maximum: 100 } }
+        - { in: query, name: limit, schema: { type: integer } }
+        - { in: query, name: q, schema: { type: string } }
+        - { in: query, name: year, schema: { type: string, example: "2026" } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: "#/components/schemas/ArticleListItem" }
+                      total: { type: integer }
+                      page: { type: integer }
+                      pages: { type: integer }
+  /articles/random:
+    get:
+      tags: [articles]
+      summary: 随机公开文章 slug（前端据此做 307 站内跳转）
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      slug: { type: string, nullable: true }
+  /articles/{slug}:
+    get:
+      tags: [articles]
+      summary: 文章详情（含上下篇与评论分页）
+      parameters:
+        - { in: path, name: slug, required: true, schema: { type: string } }
+        - { in: query, name: commentPage, schema: { type: integer } }
+        - { in: query, name: commentSort, schema: { type: string, enum: [oldest, newest] } }
+        - { in: query, name: commentId, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/ArticlePage" }
+        "404":
+          description: 文章不存在
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiError" }
+  /events:
+    get:
+      tags: [events]
+      summary: 全部活动（含文章数）
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: "#/components/schemas/Event" }
+  /events/{slug}:
+    get:
+      tags: [events]
+      summary: 活动聚合页数据（活动、地图、资料、文章、快照）
+      parameters:
+        - { in: path, name: slug, required: true, schema: { type: string } }
+        - { in: query, name: snapshot, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/EventPage" }
+        "404":
+          description: 活动不存在
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiError" }
+  /redirects:
+    get:
+      tags: [site]
+      summary: 查询旧网址别名重定向
+      parameters:
+        - {
+            in: query,
+            name: kind,
+            required: true,
+            schema: { type: string, enum: [article, event] },
+          }
+        - { in: query, name: slug, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: target 为 null 表示没有重定向
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      target: { type: string, nullable: true }
+        "400":
+          description: 参数不正确
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiError" }
+  /admin/session:
+    get:
+      tags: [admin]
+      summary: 管理员会话状态（登录页也用它判断是否已初始化账号）
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/AdminSession" }
+  /admin/overview:
+    get:
+      tags: [admin]
+      summary: 后台概览计数与最近文章
+      security:
+        - adminCookie: []
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiError" }
+  /admin/articles:
+    get:
+      tags: [admin]
+      summary: 后台文章列表
+      security:
+        - adminCookie: []
+      parameters:
+        - { in: query, name: q, schema: { type: string } }
+        - { in: query, name: event, schema: { type: integer } }
+        - { in: query, name: page, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      rows: { type: array, items: { type: object } }
+                      events: { type: array, items: { type: object } }
+                      total: { type: integer }
+                      page: { type: integer }
+                      pages: { type: integer }
+                      perPage: { type: integer }
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiError" }
+    post:
+      tags: [admin]
+      summary: 新建文章
+      security:
+        - adminCookie: []
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LegacyError" }
+  /admin/articles/{id}:
+    get:
+      tags: [admin]
+      summary: 后台文章编辑数据
+      security:
+        - adminCookie: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: 文章不存在
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiError" }
+    put:
+      tags: [admin]
+      summary: 更新文章
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+    delete:
+      tags: [admin]
+      summary: 删除文章
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+  /admin/event-options:
+    get:
+      tags: [admin]
+      summary: 文章编辑器的活动下拉选项
+      security:
+        - adminCookie: []
+      responses:
+        "200":
+          description: OK
+  /admin/events:
+    get:
+      tags: [admin]
+      summary: 后台活动列表
+      security:
+        - adminCookie: []
+      responses:
+        "200":
+          description: OK
+    post:
+      tags: [admin]
+      summary: 新建活动
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+  /admin/events/{id}:
+    get:
+      tags: [admin]
+      summary: 后台活动编辑数据
+      security:
+        - adminCookie: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: 活动不存在
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiError" }
+    put:
+      tags: [admin]
+      summary: 更新活动
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+    delete:
+      tags: [admin]
+      summary: 删除活动
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+  /admin/comments:
+    get:
+      tags: [admin]
+      summary: 后台评论筛选列表
+      security:
+        - adminCookie: []
+      parameters:
+        - { in: query, name: q, schema: { type: string } }
+        - {
+            in: query,
+            name: status,
+            schema: { type: string, enum: [all, visible, hidden, deleted] },
+          }
+        - { in: query, name: article, schema: { type: string } }
+        - { in: query, name: user, schema: { type: string } }
+        - { in: query, name: from, schema: { type: string } }
+        - { in: query, name: to, schema: { type: string } }
+        - { in: query, name: page, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+  /admin/users:
+    get:
+      tags: [admin]
+      summary: 评论账号列表
+      security:
+        - adminCookie: []
+      responses:
+        "200":
+          description: OK
+    post:
+      tags: [admin]
+      summary: 创建评论账号
+      security:
+        - adminCookie: []
+      responses:
+        "201": { description: Created }
+  /admin/users/{id}:
+    put:
+      tags: [admin]
+      summary: 更新评论账号
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+    delete:
+      tags: [admin]
+      summary: 删除评论账号
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+  /admin/audit:
+    get:
+      tags: [admin]
+      summary: 操作记录与内容快照
+      security:
+        - adminCookie: []
+      responses:
+        "200":
+          description: OK
+  /admin/settings:
+    get:
+      tags: [admin]
+      summary: 后台站点设置
+      security:
+        - adminCookie: []
+      responses:
+        "200":
+          description: OK
+    put:
+      tags: [admin]
+      summary: 保存站点设置
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+  /account/login:
+    post:
+      tags: [mutations]
+      summary: 普通账号登录（设置 poxiao_user Cookie）
+      responses:
+        "200": { description: OK }
+        "401": { description: 用户名或密码错误 }
+  /account/logout:
+    post:
+      tags: [mutations]
+      summary: 普通账号登出
+      responses:
+        "200": { description: OK }
+  /account/password:
+    post:
+      tags: [mutations]
+      summary: 修改普通账号密码
+      security:
+        - userCookie: []
+      responses:
+        "200": { description: OK }
+  /comments:
+    post:
+      tags: [mutations]
+      summary: 发表评论或回复
+      security:
+        - userCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [article_id, content]
+              properties:
+                article_id: { type: integer }
+                parent_id: { type: integer }
+                content: { type: string, maxLength: 2000 }
+      responses:
+        "201": { description: Created }
+  /comments/{id}:
+    put:
+      tags: [mutations]
+      summary: 编辑自己的评论
+      security:
+        - userCookie: []
+      responses:
+        "200": { description: OK }
+    delete:
+      tags: [mutations]
+      summary: 删除自己的评论
+      security:
+        - userCookie: []
+      responses:
+        "200": { description: OK }
+  /treat:
+    post:
+      tags: [mutations]
+      summary: 首页饼干/红茶小游戏
+      responses:
+        "200": { description: OK }
+  /visit:
+    post:
+      tags: [mutations]
+      summary: 首页访问计数
+      responses:
+        "200": { description: OK }
+  /admin/login:
+    post:
+      tags: [mutations]
+      summary: 管理员登录（设置 poxiao_admin Cookie）
+      responses:
+        "200": { description: OK }
+  /admin/logout:
+    post:
+      tags: [mutations]
+      summary: 管理员登出
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+  /admin/upload:
+    post:
+      tags: [mutations]
+      summary: 上传图片（最大 5MB，返回 /uploads/...）
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }

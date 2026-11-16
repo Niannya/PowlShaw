@@ -1,0 +1,246 @@
+/*
+ * 纯代码题头（零图片）。配色沿用“破晓”纸本档案的深赭石 / 墨蓝 / 松绿 / 暗金，
+ * 几何图案全部由 `GenerativeHeader` 依据 slug 的 FNV-1a 哈希生成。
+ */
+
+.generative-header {
+  --gh-ink: #4a3b2a;
+  --gh-paper: #fffdf4;
+  --gh-paper-deep: #efe4cd;
+  --gh-accent: #8a6d2f;
+  position: relative;
+  isolation: isolate;
+  display: block;
+  margin: 0 0 14px;
+  padding: 0;
+  overflow: hidden;
+  color: var(--gh-ink);
+  border: 1px solid #8f836f;
+  background-color: var(--gh-paper);
+  background-image:
+    radial-gradient(
+      ellipse at 18% 14%,
+      hsla(var(--generative-hue, 32), 44%, 62%, 0.22),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at 88% 86%,
+      hsla(calc(var(--generative-hue, 32) + 210), 32%, 52%, 0.14),
+      transparent 58%
+    ),
+    linear-gradient(180deg, var(--gh-paper), var(--gh-paper-deep));
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.6),
+    inset 0 0 0 4px rgba(120, 108, 88, 0.32);
+}
+
+.generative-header[data-theme="astrolabe"] {
+  --gh-ink: #2b3f5c;
+  --gh-paper: #f6f2e5;
+  --gh-paper-deep: #e4e6db;
+  --gh-accent: #8a6d2f;
+}
+
+.generative-header[data-theme="stele"] {
+  --gh-ink: #6b3a24;
+  --gh-paper: #fbf3e4;
+  --gh-paper-deep: #ecdfc9;
+  --gh-accent: #8a6d2f;
+}
+
+.generative-header[data-theme="graticule"] {
+  --gh-ink: #3f6049;
+  --gh-paper: #f4f3e4;
+  --gh-paper-deep: #e2e5d3;
+  --gh-accent: #6c5a33;
+}
+
+.generative-header[data-theme="manuscript"] {
+  --gh-ink: #6d4a2f;
+  --gh-paper: #fdf6e6;
+  --gh-paper-deep: #f0e3c9;
+  --gh-accent: #8a6d2f;
+}
+
+.generative-header-art {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--gh-ink);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.generative-header-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: 24px 28px 22px;
+}
+
+.generative-header-code {
+  display: inline-block;
+  padding: 1px 6px;
+  color: var(--gh-ink);
+  background: rgba(255, 253, 244, 0.82);
+  border: 1px solid rgba(93, 80, 58, 0.35);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.generative-header-title {
+  margin: 2px 0 0;
+  color: var(--gh-ink);
+  font-size: clamp(25px, 4.2vw, 40px);
+  font-weight: normal;
+  line-height: 1.16;
+  text-shadow:
+    0 0 10px rgba(255, 253, 244, 0.9),
+    1px 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.generative-header-title a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(93, 80, 58, 0.35);
+}
+
+.generative-header-title a:visited {
+  color: inherit;
+}
+
+.generative-header-title a:hover {
+  color: #7a270e;
+  background: rgba(255, 245, 157, 0.55);
+}
+
+.generative-header-subtitle {
+  margin: 0;
+  max-width: 68ch;
+  color: #574b3d;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.generative-header-extra {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 2px;
+  color: #4c453b;
+  font-size: 13px;
+}
+
+.generative-header-extra .article-meta {
+  margin: 0;
+}
+
+.generative-header[data-variant="banner"] {
+  min-height: 196px;
+}
+
+.generative-header[data-variant="cover"] {
+  min-height: 178px;
+}
+
+.generative-header[data-variant="compact"] {
+  min-height: 122px;
+  margin-bottom: 10px;
+}
+
+.generative-header[data-variant="compact"] .generative-header-body {
+  padding: 18px 18px 20px;
+  gap: 4px;
+}
+
+.generative-header[data-variant="compact"] .generative-header-code {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+}
+
+.generative-header[data-variant="compact"] .generative-header-title {
+  font-size: clamp(18px, 3vw, 24px);
+}
+
+.generative-header[data-variant="compact"] .generative-header-subtitle {
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------------- 首页活动面板 */
+
+.event-panel-body {
+  display: grid;
+  gap: 8px;
+}
+
+.event-panel-body .generative-header {
+  margin-bottom: 0;
+}
+
+.event-panel-body p {
+  margin: 0;
+}
+
+.event-panel-body .event-status {
+  margin-right: 4px;
+  vertical-align: 1px;
+}
+
+.event-panel-date {
+  color: #5b5148;
+  font-size: 13px;
+}
+
+.event-panel-body .old-button {
+  margin-top: 2px;
+  justify-self: start;
+}
+
+/* --------------------------------------------------------------- 活动页骨架 */
+
+.event-intro-panel {
+  margin-top: 14px;
+}
+
+.event-extension-panel {
+  margin-top: 14px;
+}
+
+.event-extension-body {
+  display: grid;
+  gap: 10px;
+}
+
+.event-extension-note {
+  margin: 0;
+  color: #5b5148;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .generative-header[data-variant="banner"],
+  .generative-header[data-variant="cover"] {
+    min-height: 150px;
+  }
+
+  .generative-header-body {
+    padding: 16px 15px 15px;
+  }
+
+  .generative-header-code {
+    letter-spacing: 0.18em;
+  }
+
+  .generative-header-title {
+    font-size: clamp(22px, 7vw, 30px);
+  }
+}

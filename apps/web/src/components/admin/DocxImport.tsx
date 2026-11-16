@@ -6,8 +6,11 @@ import { fetchJson } from "@/lib/client-fetch";
 export type ImportedDocx = {
   title: string;
   content_html: string;
-  image_count: number;
-  warnings: string[];
+};
+
+type DocxParsePayload = {
+  data?: { title?: string; content_html?: string };
+  error?: string | { message?: string };
 };
 
 export function DocxImport({
@@ -19,7 +22,7 @@ export function DocxImport({
 }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const [warnings, setWarnings] = useState<string[]>([]);
+  const [failed, setFailed] = useState(false);
 
   async function importFile(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
@@ -31,25 +34,32 @@ export function DocxImport({
     }
 
     setBusy(true);
+    setFailed(false);
     setMessage("正在读取 Word 文档……");
-    setWarnings([]);
     const data = new FormData();
     data.set("file", file);
-    const { response, data: result } = await fetchJson<ImportedDocx & { error?: string }>(
-      "/api/v1/admin/articles/import-docx",
+    const { response, data: result } = await fetchJson<DocxParsePayload>(
+      "/api/v1/upload/docx-parse",
       { method: "POST", body: data },
     );
     setBusy(false);
     input.value = "";
 
-    if (!response?.ok) {
-      setMessage(result.error || "DOCX 导入失败，请检查网络连接后重试。");
+    if (!response?.ok || !result.data) {
+      setFailed(true);
+      setMessage(
+        typeof result.error === "string"
+          ? result.error
+          : result.error?.message || "DOCX 导入失败，请检查网络连接后重试。",
+      );
       return;
     }
 
-    onImported(result);
-    setWarnings(result.warnings || []);
-    setMessage(`导入完成：正文已放入编辑器，提取了 ${result.image_count} 张图片。`);
+    onImported({
+      title: result.data.title || "",
+      content_html: result.data.content_html || "",
+    });
+    setMessage("导入完成：正文已放入编辑器，文档内的图片会被忽略。");
   }
 
   return (
@@ -61,19 +71,7 @@ export function DocxImport({
         disabled={busy}
         onChange={importFile}
       />
-      {message ? (
-        <p className={message.includes("失败") ? "form-error" : "form-success"}>{message}</p>
-      ) : null}
-      {warnings.length ? (
-        <details>
-          <summary>转换提示（{warnings.length}）</summary>
-          <ul>
-            {warnings.map((warning, index) => (
-              <li key={`${warning}-${index}`}>{warning}</li>
-            ))}
-          </ul>
-        </details>
-      ) : null}
+      {message ? <p className={failed ? "form-error" : "form-success"}>{message}</p> : null}
     </section>
   );
 }

@@ -122,18 +122,14 @@ export async function getFeaturedEvent(): Promise<Event | undefined> {
   return (await getEvents()).find((event) => event.is_featured);
 }
 
-export const getEventDetail = cache(
-  async (slug: string, snapshotId?: number): Promise<EventPayload | undefined> => {
-    try {
-      return await apiServer<EventPayload>(
-        `/events/${encodeURIComponent(slug)}${queryString({ snapshot: snapshotId })}`,
-      );
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) return undefined;
-      throw error;
-    }
-  },
-);
+export const getEventDetail = cache(async (slug: string): Promise<EventPayload | undefined> => {
+  try {
+    return await apiServer<EventPayload>(`/events/${encodeURIComponent(slug)}`);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return undefined;
+    throw error;
+  }
+});
 
 export async function getSlugRedirect(
   kind: SlugKind,

@@ -1,5 +1,5 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import { GenerativeHeader } from "@/components/visuals/GenerativeHeader";
 import { formatMonth } from "@/lib/content";
 import { eventStatus } from "@/lib/event-status";
 import type { Event } from "@/lib/queries";
@@ -30,36 +30,41 @@ export function EventPanel({
   }
   const status = eventStatus(event);
   const panelTitle = status === "ended" ? "往期活动精选" : "正在进行的活动";
+  const dateRange =
+    event.starts_at || event.ends_at
+      ? `${formatMonth(event.starts_at)} — ${formatMonth(event.ends_at)}`
+      : "";
 
   return (
     <section className="panel event-panel">
       <h2 className="panel-title coral">{panelTitle}</h2>
-      <div className="panel-body event-summary">
-        {event.banner_url ? <img src={event.banner_url} alt="" className="event-banner" /> : null}
-        <div>
-          <div className="event-heading-row">
-            <h3>
-              <Link href={`/events/${event.slug}`} target={linkTarget} rel={linkRel}>
-                {event.title}
-              </Link>
-            </h3>
-            <span className={`event-status ${status}`}>{statusName[status]}</span>
-          </div>
-          <p>{event.summary || "点击进入活动页面，查看活动介绍与参与作品。"}</p>
-          {event.starts_at || event.ends_at ? (
-            <p className="event-date">
-              {formatMonth(event.starts_at)} — {formatMonth(event.ends_at)}
-            </p>
-          ) : null}
-          <Link
-            className="old-button"
-            href={`/events/${event.slug}`}
-            target={linkTarget}
-            rel={linkRel}
-          >
-            进入活动页面
-          </Link>
-        </div>
+      <div className="panel-body event-panel-body">
+        <GenerativeHeader
+          slug={event.slug}
+          title={
+            <Link href={`/events/${event.slug}`} target={linkTarget} rel={linkRel}>
+              {event.title}
+            </Link>
+          }
+          subtitle={
+            <>
+              <span className={`event-status ${status}`}>{statusName[status]}</span>
+              {dateRange ? <span className="event-panel-date">　{dateRange}</span> : null}
+            </>
+          }
+          theme={event.visual_theme}
+          variant="compact"
+          headingLevel={3}
+        />
+        <p>{event.summary || "点击进入活动页面，查看活动介绍与参与作品。"}</p>
+        <Link
+          className="old-button"
+          href={`/events/${event.slug}`}
+          target={linkTarget}
+          rel={linkRel}
+        >
+          进入活动页面
+        </Link>
       </div>
     </section>
   );

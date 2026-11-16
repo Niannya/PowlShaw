@@ -1,7 +1,6 @@
 import type { EventGroup } from "@/lib/event-groups";
-import type { EditableEventMapNode } from "@/lib/event-map-node-validation";
-import type { EditableEventMapRegion, EventMapPoint } from "@/lib/event-map-region-validation";
-import type { EditableEventMapRelation } from "@/lib/event-map-relation-validation";
+import type { EventExtensionRecord, PublicEventExtension } from "@/lib/extensions/types";
+import type { VisualTheme } from "@/lib/visual-theme";
 
 /* --------------------------------------------------------------- site data */
 
@@ -71,7 +70,8 @@ export type ArticleListItem = {
   title: string;
   excerpt: string;
   published_at: string | null;
-  cover_url: string | null;
+  /** 纯代码视觉主题；旧数据缺省时按 `auto` 处理。 */
+  visual_theme?: VisualTheme;
   is_pinned: number;
   event_section_path?: string;
 };
@@ -93,7 +93,8 @@ export type Event = {
   starts_at: string | null;
   ends_at: string | null;
   status_override: "upcoming" | "active" | "ended" | null;
-  banner_url: string | null;
+  /** 纯代码视觉主题；旧数据缺省时按 `auto` 处理。 */
+  visual_theme?: VisualTheme;
   is_featured: number;
   sort_order: number;
   article_count?: number;
@@ -152,107 +153,16 @@ export type ArticleDetailPayload = {
   comments: CommentsPage;
 };
 
-/* ---------------------------------------------------------------- event map */
-
-export type EventMapConfig = {
-  map_title: string;
-  map_description: string;
-  image_url: string;
-  image_alt: string;
-  image_width: number;
-  image_height: number;
-  hero_kicker: string;
-  map_eyebrow: string;
-  map_section_title: string;
-  introduction_eyebrow: string;
-  introduction_title: string;
-  works_eyebrow: string;
-  works_title: string;
-};
-
-export type EventMapSettings = EventMapConfig & {
-  event_id: number;
-  is_enabled: number;
-};
-
-export type EventMapArticle = {
-  id: number;
-  slug: string;
-  title: string;
-};
-
-export type EventMapNode = EditableEventMapNode & {
-  id: number;
-  event_id: number;
-  user_id: number;
-  owner_name: string;
-  articles: EventMapArticle[];
-  created_at: string;
-  updated_at: string;
-};
-
-export type EventMapRegion = EditableEventMapRegion & {
-  id: number;
-  event_id: number;
-  user_id: number;
-  owner_name: string;
-  created_at: string;
-  updated_at: string;
-};
-
-export type EventMapRelation = EditableEventMapRelation & {
-  id: number;
-  event_id: number;
-  user_id: number;
-  owner_name: string;
-  source_name: string;
-  target_name: string;
-  created_at: string;
-  updated_at: string;
-};
-
-export type EventMapSnapshotMap = {
-  image_url: string;
-  image_alt: string;
-  image_width: number;
-  image_height: number;
-};
-
-export type EventMapSnapshotPayload = {
-  version: 1;
-  map: EventMapSnapshotMap;
-  nodes: EventMapNode[];
-  regions: EventMapRegion[];
-  relations: EventMapRelation[];
-};
-
-export type EventMapSnapshotSummary = {
-  id: number;
-  event_id: number;
-  snapshot_date: string;
-  title: string;
-  description: string;
-  node_count: number;
-  region_count: number;
-  relation_count: number;
-  created_at: string;
-};
-
-export type EventMapSnapshot = EventMapSnapshotSummary & EventMapSnapshotPayload;
-
+/**
+ * 活动详情：固定骨架 + 扩展插槽。
+ * 六张地图表与列国纪专题下线后不再有 map / snapshot / nodes / regions 字段。
+ */
 export type EventPayload = {
   event: Event;
-  map: EventMapSettings | null;
   documents: EventDocument[];
   articles: ArticleListItem[];
-  snapshots: EventMapSnapshotSummary[];
-  snapshot: EventMapSnapshot | null;
-  nodes: EventMapNode[];
-  regions: EventMapRegion[];
-  relations: EventMapRelation[];
+  extensions: PublicEventExtension[];
 };
-
-export type EventPoint = EventMapPoint;
 
 /* ------------------------------------------------------------------- admin */
 
@@ -299,13 +209,26 @@ export type AdminArticlePayload = {
   eventIds: number[];
 };
 
+/**
+ * 管理端扩展条目：与 `PUT /admin/events/:id/extensions/:kind` 的 `items` 完全同构，
+ * 可原样 round-trip 回写。
+ */
+export type AdminEventExtensionItem = {
+  itemKey: string;
+  payload: unknown;
+};
+
+/** 管理端扩展记录：`GET /admin/events/:id/extensions` 的单项。 */
+export type AdminEventExtension = EventExtensionRecord<unknown> & {
+  items: AdminEventExtensionItem[];
+};
+
 export type AdminEventDetailPayload = {
   event: Record<string, unknown>;
   entries: { id: number; title: string; section_path: string }[];
   sections: { id: number; path_name: string }[];
   documents: EventDocumentRecord[];
-  mapSettings: EventMapSettings | null;
-  mapSnapshots: EventMapSnapshotSummary[];
+  extensions: AdminEventExtension[];
 };
 
 export type AdminComment = {

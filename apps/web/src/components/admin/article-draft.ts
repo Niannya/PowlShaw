@@ -1,3 +1,24 @@
+import type { VisualTheme } from "@/lib/visual-theme";
+
+/**
+ * 这里刻意只保留类型导入：`tests/article-draft.test.mjs` 由 Node 直接执行 `.ts`，
+ * 无法解析 `@/` 别名或省略扩展名的相对导入。值的完整性由该测试与
+ * `VISUAL_THEMES` 逐项比对来保证。
+ */
+export const ARTICLE_VISUAL_THEMES: VisualTheme[] = [
+  "auto",
+  "astrolabe",
+  "stele",
+  "graticule",
+  "manuscript",
+];
+
+export function normalizeArticleVisualTheme(value: unknown): VisualTheme {
+  return typeof value === "string" && ARTICLE_VISUAL_THEMES.includes(value as VisualTheme)
+    ? (value as VisualTheme)
+    : "auto";
+}
+
 /** The editable fields shared by the article form and its local draft. */
 export type ArticleInitial = {
   id?: number;
@@ -6,7 +27,7 @@ export type ArticleInitial = {
   content_html?: string;
   content_markdown?: string;
   published_at?: string | null;
-  cover_url?: string | null;
+  visual_theme?: string | null;
   is_pinned?: number;
   comments_mode?: "open" | "closed" | "hidden";
   event_ids?: number[];
@@ -19,7 +40,7 @@ export type ArticleDraft = {
   content_html: string;
   content_markdown: string;
   published_at: string;
-  cover_url: string;
+  visual_theme: VisualTheme;
   is_pinned: boolean;
   comments_mode: "open" | "closed" | "hidden";
   event_ids: number[];
@@ -44,7 +65,7 @@ export function createArticleDraft(initial: ArticleInitial): ArticleDraft {
     content_html: initial.content_html || "",
     content_markdown: initial.content_markdown || "",
     published_at: initial.published_at ? initial.published_at.slice(0, 10) : today,
-    cover_url: initial.cover_url || "",
+    visual_theme: normalizeArticleVisualTheme(initial.visual_theme),
     is_pinned: Boolean(initial.is_pinned),
     comments_mode: initial.comments_mode || "open",
     event_ids: initial.event_ids || [],
@@ -67,7 +88,9 @@ export function isStoredArticleDraft(value: unknown): value is StoredArticleDraf
     typeof data.content_html === "string" &&
     typeof data.content_markdown === "string" &&
     typeof data.published_at === "string" &&
-    typeof data.cover_url === "string" &&
+    // 旧草稿只有封面图片地址、没有题头主题字段，无法安全迁移，直接丢弃。
+    typeof data.visual_theme === "string" &&
+    normalizeArticleVisualTheme(data.visual_theme) === data.visual_theme &&
     typeof data.is_pinned === "boolean" &&
     (data.comments_mode === "open" ||
       data.comments_mode === "closed" ||

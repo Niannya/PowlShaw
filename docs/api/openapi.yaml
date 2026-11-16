@@ -1,19 +1,21 @@
 openapi: 3.0.3
 info:
   title: PowlShaw API
-  version: 0.2.0
+  version: 0.3.0
   description: |
-    `apps/api` 提供的版本化接口。前端（`apps/web`）只通过 `/api/v1` 访问本服务。
+    单一 Next.js 应用（`apps/web`）内同仓挂载的 Hono 接口。页面（RSC）通过
+    `app.request()` 进程内直调，浏览器通过同源 `/api/v1` 访问。
 
     - 新只读端点返回 `{ "data": ... }`。
     - 新只读端点错误返回 `{ "error": { "code", "message", "details"? } }`。
     - 早期写入端点（登录、评论、后台 CRUD）仍返回 `{ "error": "文案" }`，前端错误适配器同时兼容。
-    - 会话由本服务通过 HttpOnly Cookie 设置：`poxiao_user`（普通账号）、`poxiao_admin`（管理员）。
+    - 会话由 Hono 通过 HttpOnly Cookie 设置：`poxiao_user`（普通账号）、`poxiao_admin`（管理员）。
+    - 图片上传、列国纪地图与本地 `/uploads` 静态文件服务已下线；活动资料改走 Vercel Blob 客户端直传。
 servers:
-  - url: http://localhost:3001/api/v1
+  - url: http://localhost:3000/api/v1
     description: 本地开发
   - url: https://example.com/api/v1
-    description: 同源反向代理
+    description: 生产同源入口
 tags:
   - name: site
   - name: articles
@@ -63,7 +65,9 @@ components:
         title: { type: string }
         excerpt: { type: string }
         published_at: { type: string, nullable: true }
-        cover_url: { type: string, nullable: true }
+        visual_theme:
+          type: string
+          enum: [auto, astrolabe, stele, graticule, manuscript]
         is_pinned: { type: integer, enum: [0, 1] }
         event_section_path: { type: string }
     Article:
@@ -92,7 +96,9 @@ components:
           type: string
           nullable: true
           enum: [upcoming, active, ended, null]
-        banner_url: { type: string, nullable: true }
+        visual_theme:
+          type: string
+          enum: [auto, astrolabe, stele, graticule, manuscript]
         is_featured: { type: integer, enum: [0, 1] }
         sort_order: { type: integer }
         article_count: { type: integer }
@@ -169,39 +175,42 @@ components:
             previous: { $ref: "#/components/schemas/ArticleListItem" }
             next: { $ref: "#/components/schemas/ArticleListItem" }
         comments: { $ref: "#/components/schemas/CommentsPage" }
-    EventMapSettings:
+    PublicEventExtension:
       type: object
-      additionalProperties: true
+      description: |
+        活动扩展模块。`kind` 对应 `src/lib/extensions/definitions.ts` 中的注册项：
+        `ranking`（晋级名单）、`timeline`（时间线）、`gallery`（作品墙）、`ballot`（读者投票）。
+        未注册、版本不符或配置不兼容时前端静默跳过。
       properties:
-        event_id: { type: integer }
-        is_enabled: { type: integer }
-        map_title: { type: string }
-        map_description: { type: string }
-        image_url: { type: string }
-        image_alt: { type: string }
-        image_width: { type: integer }
-        image_height: { type: integer }
-    EventMapSnapshot:
-      type: object
-      additionalProperties: true
-      properties:
-        id: { type: integer }
-        event_id: { type: integer }
-        snapshot_date: { type: string }
-        title: { type: string }
-        description: { type: string }
-        map: { type: object }
-        nodes: { type: array, items: { type: object } }
-        regions: { type: array, items: { type: object } }
-        relations: { type: array, items: { type: object } }
+        eventId: { type: integer }
+        kind: { type: string, example: ranking }
+        version: { type: integer, example: 1 }
+        config: { type: object, additionalProperties: true }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              itemKey: { type: string }
+              payload: { type: object, additionalProperties: true }
+        canSubmit:
+          type: boolean
+          description: 当前请求者能否向该模块提交互动条目（登录、未禁言且模块允许）。
+    AdminEventExtension:
+      allOf:
+        - $ref: "#/components/schemas/PublicEventExtension"
+        - type: object
+          properties:
+            id: { type: integer }
+            enabled: { type: boolean }
+            sortOrder: { type: integer }
+            visibility: { type: string, enum: [public, member] }
+            allowUserItems: { type: boolean }
+            updatedAt: { type: string }
     EventPage:
       type: object
       properties:
         event: { $ref: "#/components/schemas/Event" }
-        map:
-          allOf:
-            - $ref: "#/components/schemas/EventMapSettings"
-          nullable: true
         documents:
           type: array
           items:
@@ -215,16 +224,9 @@ components:
         articles:
           type: array
           items: { $ref: "#/components/schemas/ArticleListItem" }
-        snapshots:
+        extensions:
           type: array
-          items: { $ref: "#/components/schemas/EventMapSnapshot" }
-        snapshot:
-          allOf:
-            - $ref: "#/components/schemas/EventMapSnapshot"
-          nullable: true
-        nodes: { type: array, items: { type: object } }
-        regions: { type: array, items: { type: object } }
-        relations: { type: array, items: { type: object } }
+          items: { $ref: "#/components/schemas/PublicEventExtension" }
     AdminSession:
       type: object
       properties:
@@ -392,10 +394,9 @@ paths:
   /events/{slug}:
     get:
       tags: [events]
-      summary: 活动聚合页数据（活动、地图、资料、文章、快照）
+      summary: 活动聚合页数据（活动、资料、文章、扩展模块）
       parameters:
         - { in: path, name: slug, required: true, schema: { type: string } }
-        - { in: query, name: snapshot, schema: { type: integer } }
       responses:
         "200":
           description: OK
@@ -754,11 +755,111 @@ paths:
         - adminCookie: []
       responses:
         "200": { description: OK }
-  /admin/upload:
+  /upload/docx-parse:
     post:
       tags: [mutations]
-      summary: 上传图片（最大 5MB，返回 /uploads/...）
+      summary: 纯内存解析 DOCX 作品，忽略内嵌图片（管理员）
+      security:
+        - adminCookie: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200": { description: OK }
+  /upload/event-document-token:
+    post:
+      tags: [mutations]
+      summary: 签发活动评议资料的 Vercel Blob 客户端直传令牌（≤20MB，管理员）
       security:
         - adminCookie: []
       responses:
         "200": { description: OK }
+  /admin/events/{id}/extensions:
+    get:
+      tags: [admin]
+      summary: 读取活动扩展（含停用项与条目，管理员）
+      security:
+        - adminCookie: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      extensions:
+                        type: array
+                        items: { $ref: "#/components/schemas/AdminEventExtension" }
+  /admin/events/{id}/extensions/{kind}:
+    put:
+      tags: [admin]
+      summary: 新建或更新扩展配置（写 content_revisions 快照，管理员）
+      security:
+        - adminCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version, config]
+              properties:
+                version: { type: integer }
+                visibility: { type: string, enum: [public, member] }
+                sortOrder: { type: integer }
+                enabled: { type: boolean }
+                config: { type: object, additionalProperties: true }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [itemKey, payload]
+                    properties:
+                      itemKey: { type: string }
+                      payload: { type: object, additionalProperties: true }
+      responses:
+        "200": { description: OK }
+        "409": { description: 版本不符 }
+        "422": { description: 配置或条目校验失败 }
+    patch:
+      tags: [admin]
+      summary: 启停 / 排序 / 可见性切换（管理员）
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+    delete:
+      tags: [admin]
+      summary: 软删扩展模块（enabled=0，保留条目与历史快照，管理员）
+      security:
+        - adminCookie: []
+      responses:
+        "200": { description: OK }
+  /events/{id}/extensions/{kind}/items:
+    post:
+      tags: [mutations]
+      summary: 受邀用户提交互动条目（服务端固定 itemKey=u<userId>）
+      security:
+        - userCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payload]
+              properties:
+                payload: { type: object, additionalProperties: true }
+      responses:
+        "200": { description: OK }
+        "401": { description: 未登录 }
+        "403": { description: 禁言或模块不允许用户条目 }

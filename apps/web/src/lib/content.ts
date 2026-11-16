@@ -3,8 +3,8 @@ import { marked } from "marked";
 
 export function cleanHtml(html: string) {
   return sanitizeHtml(html || "", {
+    // 站点彻底去图片化：白名单不再包含图片标签，存量正文中的历史图片也会在渲染时被剥离。
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-      "img",
       "figure",
       "figcaption",
       "h1",
@@ -15,16 +15,14 @@ export function cleanHtml(html: string) {
     allowedAttributes: {
       ...sanitizeHtml.defaults.allowedAttributes,
       a: ["href", "name", "target", "rel"],
-      img: ["src", "alt", "title", "width", "height", "loading"],
       iframe: ["src", "title", "width", "height", "allowfullscreen"],
-      "*": ["class", "data-original-src"],
+      "*": ["class"],
     },
     allowedSchemes: ["http", "https", "mailto"],
     allowProtocolRelative: false,
     allowedIframeHostnames: ["www.youtube.com", "player.bilibili.com"],
     transformTags: {
       a: sanitizeHtml.simpleTransform("a", { rel: "noopener noreferrer" }, true),
-      img: sanitizeHtml.simpleTransform("img", { loading: "lazy" }, true),
     },
   });
 }

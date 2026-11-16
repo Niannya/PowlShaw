@@ -10,10 +10,10 @@ jobs:
     permissions:
       contents: read
     env:
+      # 构建与单元测试不连接真实数据库；运行时凭据在 Vercel 上配置。
       ADMIN_USERNAME: ci-admin
       ADMIN_PASSWORD: ci-only-password
       SESSION_SECRET: ci-only-session-secret-with-at-least-32-characters
-      DATABASE_PATH: data/ci.db
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4

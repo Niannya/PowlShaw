@@ -1,24 +1,21 @@
 {
   "name": "powlshaw",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "packageManager": "pnpm@11.19.0",
   "scripts": {
-    "dev": "pnpm --parallel --filter @powlshaw/api --filter @powlshaw/web dev",
-    "dev:api": "pnpm --filter @powlshaw/api dev",
+    "dev": "pnpm --filter @powlshaw/web dev",
     "dev:web": "pnpm --filter @powlshaw/web dev",
-    "build": "pnpm -r build",
-    "start": "pnpm --parallel --filter @powlshaw/api --filter @powlshaw/web start",
-    "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
-    "check": "pnpm format:check && pnpm -r check",
+    "build": "pnpm --filter @powlshaw/web build",
+    "start": "pnpm --filter @powlshaw/web start",
+    "lint": "pnpm --filter @powlshaw/web lint",
+    "typecheck": "pnpm --filter @powlshaw/web typecheck",
+    "test": "pnpm --filter @powlshaw/web test",
+    "check": "pnpm format:check && pnpm --filter @powlshaw/web check",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "release:check": "python apps/api/scripts/check_public_release.py"
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "next": "16.3.4",
     "prettier": "^3.9.6"
   }
 }

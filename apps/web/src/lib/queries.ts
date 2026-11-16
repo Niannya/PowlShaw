@@ -5,11 +5,10 @@ export type {
   CommentsPage,
   Event,
   EventDocument,
-  EventMapSettings,
-  EventMapSnapshot,
-  EventMapSnapshotSummary,
   EventPayload,
 } from "@/lib/api/types";
+
+export type { PublicEventExtension } from "@/lib/extensions/types";
 
 export { eventStatus } from "@/lib/event-status";
 export {

@@ -4,14 +4,15 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import { useRouter } from "next/navigation";
 import { ArticlePreviewDialog } from "@/components/admin/ArticlePreviewDialog";
 import { DocxImport, type ImportedDocx } from "@/components/admin/DocxImport";
-import { ImageUpload } from "@/components/admin/ImageUpload";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import {
   createArticleDraft,
+  normalizeArticleVisualTheme,
   type ArticleDraft,
   type ArticleInitial,
 } from "@/components/admin/article-draft";
 import { useArticleAutoSave } from "@/components/admin/useArticleAutoSave";
+import { VISUAL_THEMES } from "@/lib/visual-theme";
 
 type Option = { id: number; name?: string; title?: string };
 
@@ -214,14 +215,20 @@ export function ArticleForm({
           </label>
         </div>
         <label>
-          封面图片地址
-          <input
-            value={draft.cover_url}
-            onChange={(event) => update("cover_url", event.target.value)}
-            placeholder="/uploads/… 或 https://…"
-          />
+          题头主题
+          <select
+            value={draft.visual_theme}
+            onChange={(event) =>
+              update("visual_theme", normalizeArticleVisualTheme(event.target.value))
+            }
+          >
+            {VISUAL_THEMES.map((theme) => (
+              <option value={theme.value} key={theme.value}>
+                {theme.label}
+              </option>
+            ))}
+          </select>
         </label>
-        <ImageUpload onUploaded={(url) => update("cover_url", url)} />
         <div className="admin-field admin-editor-field">
           <span className="admin-field-label">正文</span>
           <RichTextEditor

@@ -7,6 +7,7 @@ import type {
   AdminAuditPayload,
   AdminCommentListPayload,
   AdminEventDetailPayload,
+  AdminEventExtension,
   AdminOverviewPayload,
   AdminSession,
   AdminUser,
@@ -77,6 +78,16 @@ export async function getAdminEventDetail(
     if (error instanceof ApiError && error.status === 404) return undefined;
     throw error;
   }
+}
+
+/**
+ * 活动扩展的完整列表（含停用项与条目），供后台管理页回填。
+ * 保存/启停/删除属于浏览器端写操作，由 `EventExtensionManager` 直接调用
+ * `/api/v1/admin/events/:id/extensions/:kind`（与服务端组件取数分离）。
+ */
+export async function getAdminEventExtensions(id: number): Promise<AdminEventExtension[]> {
+  return (await apiServer<{ extensions: AdminEventExtension[] }>(`/admin/events/${id}/extensions`))
+    .extensions;
 }
 
 export async function getAdminComments(params: {

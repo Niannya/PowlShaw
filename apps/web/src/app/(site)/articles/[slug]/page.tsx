@@ -1,9 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CommentSection } from "@/components/comments/CommentSection";
+import { GenerativeHeader } from "@/components/visuals/GenerativeHeader";
 import { cleanHtml, formatDate } from "@/lib/content";
 import { getArticleDetail } from "@/lib/queries";
 import { getSlugRedirect } from "@/lib/slug-redirects";
@@ -51,9 +51,14 @@ export default async function ArticlePage({ params, searchParams }: Props) {
     <>
       <Breadcrumbs items={[{ label: "全部文章", href: "/articles" }, { label: article.title }]} />
       <div className="page-pad">
-        <header className="article-header">
-          <h1>{article.title}</h1>
-          <p className="article-meta">发布：{formatDate(article.published_at)}</p>
+        <GenerativeHeader
+          slug={article.slug}
+          title={article.title}
+          subtitle={`发布：${formatDate(article.published_at)}`}
+          theme={article.visual_theme}
+          variant="cover"
+          headingLevel={1}
+        >
           {article.events.length ? (
             <p className="article-meta">
               所属活动：
@@ -65,10 +70,7 @@ export default async function ArticlePage({ params, searchParams }: Props) {
               ))}
             </p>
           ) : null}
-        </header>
-        {article.cover_url ? (
-          <img className="article-cover" src={article.cover_url} alt="" />
-        ) : null}
+        </GenerativeHeader>
         <article
           className="article-content"
           dangerouslySetInnerHTML={{ __html: cleanHtml(article.content_html) }}

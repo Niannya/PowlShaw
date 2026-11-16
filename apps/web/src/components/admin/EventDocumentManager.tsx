@@ -1,8 +1,16 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { upload } from "@vercel/blob/client";
 import { fetchJson } from "@/lib/client-fetch";
-import type { EventDocumentRecord } from "@/lib/event-documents";
+import {
+  EVENT_DOCUMENT_ACCEPT,
+  EVENT_DOCUMENT_EXTENSIONS,
+  isEventDocumentName,
+  type EventDocumentRecord,
+} from "@/lib/event-documents";
+
+const MAX_DOCUMENT_BYTES = 20 * 1024 * 1024;
 
 function formatFileSize(size: number) {
   if (size < 1024) return `${size} B`;
@@ -28,22 +36,80 @@ export function EventDocumentManager({
     );
   }
 
-  async function upload(event: FormEvent<HTMLFormElement>) {
+  async function uploadDocument(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
+    const fileInput = form.elements.namedItem("file");
+    const file = fileInput instanceof HTMLInputElement ? fileInput.files?.[0] : undefined;
+    if (!file) {
+      setError("请先选择要上传的资料文件。");
+      return;
+    }
+    if (!isEventDocumentName(file.name)) {
+      setError(`只接受 ${EVENT_DOCUMENT_EXTENSIONS.join(" / ")} 格式的文档，不再支持图片。`);
+      return;
+    }
+    if (file.size > MAX_DOCUMENT_BYTES) {
+      setError("文件超过 20MB，请拆分后再上传。");
+      return;
+    }
+
+    const displayNameInput = form.elements.namedItem("display_name");
+    const contextInput = form.elements.namedItem("context_label");
+    const displayName =
+      displayNameInput instanceof HTMLInputElement && displayNameInput.value.trim()
+        ? displayNameInput.value.trim()
+        : file.name;
+    const contextLabel = contextInput instanceof HTMLInputElement ? contextInput.value.trim() : "";
+
     setBusy("upload");
     setError("");
     setMessage("");
+
+    let fileUrl = "";
+    const uniqueName =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    try {
+      // 浏览器直接上传到 Vercel Blob，绕过 4.5MB 函数体积限制。
+      const blob = await upload(`events/${eventId}/${uniqueName}-${file.name}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/v1/upload/event-document-token",
+        clientPayload: JSON.stringify({ eventId }),
+      });
+      fileUrl = blob.url;
+    } catch (thrown) {
+      setBusy(null);
+      setError(
+        thrown instanceof Error && thrown.message
+          ? `上传失败：${thrown.message}`
+          : "上传失败，请确认已配置 Vercel Blob 后重试。",
+      );
+      return;
+    }
+
     const { response, data } = await fetchJson<{
-      error?: string;
+      ok?: boolean;
       document?: EventDocumentRecord;
+      error?: string | { message?: string };
     }>(`/api/v1/admin/events/${eventId}/documents`, {
       method: "POST",
-      body: new FormData(form),
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        file_url: fileUrl,
+        display_name: displayName,
+        file_size: file.size,
+        context_label: contextLabel,
+      }),
     });
     setBusy(null);
     if (!response?.ok || !data.document) {
-      setError(data.error || "资料上传失败，请检查网络连接后重试。");
+      setError(
+        typeof data.error === "string"
+          ? data.error
+          : data.error?.message || "文件已上传，但确认入库失败，请稍后重试。",
+      );
       return;
     }
     setDocuments((current) => [...current, data.document!]);
@@ -135,17 +201,16 @@ export function EventDocumentManager({
     <section className="event-document-manager admin-card">
       <header className="event-document-manager-heading">
         <h2>评议资料与附件</h2>
+        <p>
+          支持 {EVENT_DOCUMENT_EXTENSIONS.join(" / ")}，单个文件最大 20MB。 文件由浏览器直接上传到
+          Vercel Blob，确认后才会出现在活动页面。
+        </p>
       </header>
 
-      <form className="event-document-upload" onSubmit={upload}>
+      <form className="event-document-upload" onSubmit={uploadDocument}>
         <label>
           选择文件（最大 20MB）
-          <input
-            type="file"
-            name="file"
-            accept=".xlsx,.xls,.csv,.docx,.doc,.rtf,.pdf,.txt,.jpg,.jpeg,.png"
-            required
-          />
+          <input type="file" name="file" accept={EVENT_DOCUMENT_ACCEPT} required />
         </label>
         <label>
           显示名称（可留空）
@@ -156,7 +221,7 @@ export function EventDocumentManager({
           <input name="context_label" placeholder="例如：第一轮 / 科幻组" maxLength={160} />
         </label>
         <button className="admin-button" disabled={Boolean(busy)}>
-          {busy === "upload" ? "上传中……" : "上传资料"}
+          {busy === "upload" ? "上传并确认中……" : "上传资料"}
         </button>
       </form>
 

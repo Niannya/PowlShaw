@@ -17,7 +17,7 @@ type ErrorShape = {
 };
 
 /**
- * The new `/api/v1/v1` read endpoints return `{ error: { code, message } }`, while
+ * The new `/api/v1` read endpoints return `{ error: { code, message } }`, while
  * legacy mutation endpoints still return `{ error: string }`. Normalize both.
  */
 export async function toApiError(response: Response): Promise<ApiError> {

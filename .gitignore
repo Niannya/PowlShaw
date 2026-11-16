@@ -19,11 +19,16 @@ apps/*/.env.*
 *.pem
 *.key
 
-# Runtime databases, user uploads, backups, and import reports
+# Runtime databases, local Turso state, imported backups, and migration output
 apps/*/data/*
 !apps/*/data/.gitkeep
 apps/*/public/uploads/*
 !apps/*/public/uploads/.gitkeep
+.vercel/
+.turso/
+local.db
+local.db-*
+build/
 *.db
 *.db-*
 

@@ -5,25 +5,17 @@ const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS || "")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-// 浏览器请求 /api/v1 与 /uploads 时由 Next 转发到后端。
-// 生产环境推荐交给 Nginx 同源反代，并把 API_PROXY_TARGET 设为空字符串关闭这层转发。
-const apiProxyTarget =
-  process.env.API_PROXY_TARGET === undefined
-    ? "http://127.0.0.1:3001"
-    : process.env.API_PROXY_TARGET.trim();
-
+// 单应用架构：`/api/v1/*` 由同仓挂载的 Hono（src/app/api/v1/[[...route]]）直接处理，
+// 不再需要 Next 重写到独立后端，也不再由 Nginx 反代双进程。
 const nextConfig: NextConfig = {
   ...(allowedDevOrigins.length ? { allowedDevOrigins } : {}),
-  async rewrites() {
-    if (!apiProxyTarget) return [];
+  async redirects() {
+    // “列国纪”下线后，旧地图深链回落到普通活动页；?snapshot= 参数会被忽略。
     return [
       {
-        source: "/api/v1/:path*",
-        destination: `${apiProxyTarget}/api/v1/:path*`,
-      },
-      {
-        source: "/uploads/:path*",
-        destination: `${apiProxyTarget}/uploads/:path*`,
+        source: "/events/:slug/map",
+        destination: "/events/:slug",
+        statusCode: 301,
       },
     ];
   },

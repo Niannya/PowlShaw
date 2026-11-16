@@ -2,9 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImageUpload } from "@/components/admin/ImageUpload";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { EVENT_GROUPS, type EventGroup } from "@/lib/event-groups";
+import { normalizeVisualTheme, VISUAL_THEMES, type VisualTheme } from "@/lib/visual-theme";
 import { fetchJson } from "@/lib/client-fetch";
 
 type Initial = {
@@ -18,7 +18,7 @@ type Initial = {
   starts_at?: string | null;
   ends_at?: string | null;
   status_override?: string | null;
-  banner_url?: string | null;
+  visual_theme?: string | null;
 };
 
 function toMonthInput(value?: string | null) {
@@ -29,7 +29,9 @@ export function EventForm({ initial = {} }: { initial?: Initial }) {
   const router = useRouter();
   const [content, setContent] = useState(initial.content_html || "");
   const [markdown, setMarkdown] = useState(initial.content_markdown || "");
-  const [banner, setBanner] = useState(initial.banner_url || "");
+  const [visualTheme, setVisualTheme] = useState<VisualTheme>(
+    normalizeVisualTheme(initial.visual_theme),
+  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -48,7 +50,7 @@ export function EventForm({ initial = {} }: { initial?: Initial }) {
       starts_at: form.get("starts_at"),
       ends_at: form.get("ends_at"),
       status_override: form.get("status_override"),
-      banner_url: banner,
+      visual_theme: visualTheme,
     };
 
     const endpoint = initial.id ? `/api/v1/admin/events/${initial.id}` : "/api/v1/admin/events";
@@ -112,10 +114,19 @@ export function EventForm({ initial = {} }: { initial?: Initial }) {
         </label>
       </div>
       <label>
-        横幅图片地址
-        <input value={banner} onChange={(e) => setBanner(e.target.value)} />
+        题头主题
+        <select
+          name="visual_theme"
+          value={visualTheme}
+          onChange={(event) => setVisualTheme(normalizeVisualTheme(event.target.value))}
+        >
+          {VISUAL_THEMES.map((theme) => (
+            <option value={theme.value} key={theme.value}>
+              {theme.label}
+            </option>
+          ))}
+        </select>
       </label>
-      <ImageUpload onUploaded={setBanner} />
       <div className="admin-field admin-editor-field">
         <span className="admin-field-label">活动介绍</span>
         <RichTextEditor

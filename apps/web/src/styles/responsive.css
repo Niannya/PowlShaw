@@ -51,54 +51,6 @@
   .directory-grid {
     grid-template-columns: 1fr;
   }
-  .event-summary {
-    grid-template-columns: 1fr;
-  }
-  .event-map-entry {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .world-map-timeline {
-    align-items: stretch;
-    flex-direction: column;
-  }
-  .world-map-timeline label,
-  .world-map-timeline div {
-    flex-basis: auto;
-  }
-  .world-map-timeline div {
-    text-align: left;
-  }
-  .world-map-toolbar .world-map-original-link {
-    margin-left: 0;
-  }
-  .world-map-node-panel {
-    position: static;
-    width: auto;
-    max-height: none;
-    border-width: 1px 0 0;
-    box-shadow: none;
-  }
-  .world-map-node-label {
-    max-width: 105px;
-    font-size: 10px;
-  }
-  .world-map-help {
-    font-size: 11px;
-  }
-  body:has(.lieguoji-special-page) .site-shell {
-    width: 100%;
-    display: block;
-  }
-  .lieguoji-hero {
-    padding: 28px 18px 18px;
-  }
-  .lieguoji-title-row {
-    display: block;
-  }
-  .lieguoji-section-heading {
-    align-items: flex-start;
-  }
   .article-list li {
     grid-template-columns: 1fr;
     gap: 1px;
@@ -205,23 +157,6 @@
   .event-document-actions {
     flex-wrap: wrap;
   }
-  .event-map-settings-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .event-map-copy-grid {
-    grid-template-columns: 1fr;
-  }
-  .event-map-snapshot-form {
-    grid-template-columns: 1fr;
-  }
-  .event-map-snapshot-description {
-    grid-column: auto;
-  }
-  .event-map-snapshot-list article {
-    align-items: flex-start;
-    flex-direction: column;
-  }
   .event-section-creator {
     grid-template-columns: 1fr auto;
   }
@@ -266,5 +201,24 @@
   }
   .admin-user-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .extension-gallery,
+  .extension-gallery[data-columns="2"],
+  .extension-gallery[data-columns="4"] {
+    grid-template-columns: 1fr;
+  }
+  .extension-ranking {
+    font-size: 14px;
+  }
+  .extension-ranking th,
+  .extension-ranking td {
+    padding: 4px 5px;
+  }
+  .event-extension-create {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

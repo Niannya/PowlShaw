@@ -1,3 +1,5 @@
+import type { Context } from "hono";
+
 export type ApiErrorBody = {
   error: {
     code: string;
@@ -46,6 +48,7 @@ export function jsonError(message: string, status = 400) {
 }
 
 /** 表单提交（`application/x-www-form-urlencoded`）仍使用 303 相对跳转。 */
-export function formRedirect(location: string, status = 303) {
-  return new Response(null, { status, headers: { Location: location } });
+export function formRedirect(c: Context, location: string, status = 303) {
+  // 必须通过 Hono 的 context 生成响应，`setCookie` 写入的 Set-Cookie 头才会被合并进去。
+  return c.redirect(location, status as 301 | 302 | 303 | 307 | 308);
 }

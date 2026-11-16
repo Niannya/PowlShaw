@@ -47,7 +47,7 @@ authRoutes.post("/login", async (c) => {
   const limit = await checkLoginLimit(username, c.req.raw);
 
   if (!limit.allowed) {
-    if (isFormSubmission) return formRedirect("/login?error=rate-limit");
+    if (isFormSubmission) return formRedirect(c, "/login?error=rate-limit");
     return Response.json(
       { error: "尝试次数过多，请稍后再试。" },
       { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
@@ -65,7 +65,7 @@ authRoutes.post("/login", async (c) => {
   const passwordIsValid = verifyLoginPassword(password, user?.password_hash);
   if (!user || !user.is_active || !passwordIsValid) {
     await recordLoginFailure(limit.key);
-    if (isFormSubmission) return formRedirect("/login?error=credentials");
+    if (isFormSubmission) return formRedirect(c, "/login?error=credentials");
     return Response.json({ error: "用户名或密码不正确。" }, { status: 401 });
   }
 
@@ -78,14 +78,15 @@ authRoutes.post("/login", async (c) => {
     const nextPath = user.must_change_password
       ? `/account?first=1&next=${encodeURIComponent(requestedPath)}`
       : requestedPath;
-    return formRedirect(nextPath);
+    return formRedirect(c, nextPath);
   }
-  return Response.json({ ok: true, must_change_password: Boolean(user.must_change_password) });
+  return c.json({ ok: true, must_change_password: Boolean(user.must_change_password) });
 });
 
 authRoutes.post("/logout", (c) => {
   clearUserSessionCookie(c);
-  return Response.json({ ok: true });
+  // 必须用 c.json 返回，否则 Set-Cookie 不会进入响应头。
+  return c.json({ ok: true });
 });
 
 authRoutes.post("/password", async (c) => {
@@ -122,7 +123,7 @@ authRoutes.post("/password", async (c) => {
     [user.id],
   );
   if (updated) setUserSessionCookie(c, user.id, updated.session_version, requestIsHttps(c.req.raw));
-  return Response.json({ ok: true });
+  return c.json({ ok: true });
 });
 
 authRoutes.post("/notifications/read", async (c) => {

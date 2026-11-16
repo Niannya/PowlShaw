@@ -108,13 +108,13 @@ adminRoutes.post("/login", async (c) => {
   const username = String(body.username || "").slice(0, 64);
 
   if (!(await adminCredentialsAreConfigured())) {
-    if (isFormSubmission) return formRedirect("/admin/login?error=not-configured");
+    if (isFormSubmission) return formRedirect(c, "/admin/login?error=not-configured");
     return Response.json({ error: "服务器尚未初始化后台账号。" }, { status: 503 });
   }
 
   const limit = await checkLoginLimit(username, c.req.raw, "admin-login");
   if (!limit.allowed) {
-    if (isFormSubmission) return formRedirect("/admin/login?error=rate-limit");
+    if (isFormSubmission) return formRedirect(c, "/admin/login?error=rate-limit");
     return Response.json(
       { error: "尝试次数过多，请稍后再试。" },
       { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
@@ -123,20 +123,21 @@ adminRoutes.post("/login", async (c) => {
 
   if (!(await credentialsAreValid(username, String(body.password || "")))) {
     await recordLoginFailure(limit.key);
-    if (isFormSubmission) return formRedirect("/admin/login?error=credentials");
+    if (isFormSubmission) return formRedirect(c, "/admin/login?error=credentials");
     return Response.json({ error: "用户名或密码不正确。" }, { status: 401 });
   }
 
   await clearLoginFailures(limit.key);
   const credentials = await readAdminCredentials();
   setAdminSessionCookie(c, credentials?.session_version ?? 1, requestIsHttps(c.req.raw));
-  if (isFormSubmission) return formRedirect("/admin");
-  return Response.json({ ok: true });
+  if (isFormSubmission) return formRedirect(c, "/admin");
+  // 必须用 c.json 返回，否则 Set-Cookie 不会进入响应头。
+  return c.json({ ok: true });
 });
 
 adminRoutes.post("/logout", (c) => {
   clearAdminSessionCookie(c);
-  return Response.json({ ok: true });
+  return c.json({ ok: true });
 });
 
 adminRoutes.get("/session", async (c) => apiData(await adminSessionPayload(c.get("admin"))));
@@ -160,7 +161,7 @@ adminRoutes.put("/password", requireAdmin, async (c) => {
 
   await auditAdmin("change_password", "admin_credentials");
   setAdminSessionCookie(c, updated.sessionVersion, requestIsHttps(c.req.raw));
-  return Response.json({ ok: true });
+  return c.json({ ok: true });
 });
 
 /* --------------------------------------------------------------- 概览 */

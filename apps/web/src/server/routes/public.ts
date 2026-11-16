@@ -111,7 +111,8 @@ publicRoutes.post("/visit", async (c) => {
     path: "/",
     maxAge: VISIT_WINDOW_SECONDS,
   });
-  return Response.json({ count: await currentVisitCount() });
+  // 必须用 c.json 返回，否则 Set-Cookie 不会进入响应头。
+  return c.json({ count: await currentVisitCount() });
 });
 
 publicRoutes.get("/treat", async () => Response.json({ totals: await getTreatTotals() }));

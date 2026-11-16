@@ -103,15 +103,17 @@ curl -s https://<域名>/api/v1/health
 
 ## 8. 常见问题
 
-| 现象                                         | 原因 / 处理                                                                                                                  |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `/api/v1/site` 返回 503「数据库尚未配置」    | 缺少 `TURSO_DATABASE_URL`，或 Preview 环境未继承变量                                                                         |
-| 写操作返回 403（空响应）                     | `hono/csrf` 拒绝了跨源请求；确认通过同源页面操作，或把预览域名加入允许列表                                                   |
-| 上传资料提示「文件地址必须是 Vercel Blob」   | 未配置 Blob Store，或 `BLOB_HOST_SUFFIX` 与实际域名不符                                                                      |
-| 后台登录提示「服务器尚未初始化后台账号」     | `admin_credentials` 为空且 `ADMIN_PASSWORD` 未配置/为占位符（`replace-with-a-strong-password`、`ci-only-password` 会被拒绝） |
-| 活动资料下载 404                             | 该记录仍是旧 `/uploads/...` 地址，需要重新上传到 Blob                                                                        |
-| 构建时报 `@libsql/client/web` 不支持 `file:` | 本地误用了文件数据库；改用 `turso dev` 或 Turso 云端地址                                                                     |
-| `turso db shell` 导入后只有 19/21 张表       | 统计时把 `sqlite_sequence` 算进去了；业务表应为 20 张                                                                        |
+| 现象                                                | 原因 / 处理                                                                                                                  |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `/api/v1/site` 返回 503「数据库尚未配置」           | 缺少 `TURSO_DATABASE_URL`，或 Preview 环境未继承变量                                                                         |
+| 写操作返回 403（空响应）                            | `hono/csrf` 拒绝了跨源请求；确认通过同源页面操作，或把预览域名加入允许列表                                                   |
+| 上传资料提示「文件地址必须是 Vercel Blob」          | 未配置 Blob Store，或 `BLOB_HOST_SUFFIX` 与实际域名不符                                                                      |
+| 后台登录提示「服务器尚未初始化后台账号」            | `admin_credentials` 为空且 `ADMIN_PASSWORD` 未配置/为占位符（`replace-with-a-strong-password`、`ci-only-password` 会被拒绝） |
+| 改了 `ADMIN_USERNAME` / `ADMIN_PASSWORD` 仍登录不上 | 环境变量只在首次初始化生效；运行 `pnpm --filter @powlshaw/web reset:admin` 同步数据库，并清空登录失败锁定                    |
+| 登录返回 429                                        | 同一用户名/IP 15 分钟内失败 5 次会锁定 15 分钟；`reset:admin` 会清空 `user_login_attempts`                                   |
+| 活动资料下载 404                                    | 该记录仍是旧 `/uploads/...` 地址，需要重新上传到 Blob                                                                        |
+| 构建时报 `@libsql/client/web` 不支持 `file:`        | 本地误用了文件数据库；改用 `turso dev` 或 Turso 云端地址                                                                     |
+| `turso db shell` 导入后只有 19/21 张表              | 统计时把 `sqlite_sequence` 算进去了；业务表应为 20 张                                                                        |
 
 ## 9. 回滚
 

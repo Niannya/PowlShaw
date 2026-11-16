@@ -95,6 +95,14 @@ pnpm dev
 
 首次初始化管理员：数据库为空时，`ADMIN_USERNAME` / `ADMIN_PASSWORD` 会在第一次后台登录请求时写入 `admin_credentials`（只保存 scrypt 哈希）。之后请在 `/admin/security` 修改密码。
 
+> `.env.local` 里的 `ADMIN_USERNAME` / `ADMIN_PASSWORD` **只在首次初始化时生效**。数据库已有管理员记录后，直接改环境变量不会更新账号。忘记密码、修改用户名或被登录限流锁定时，运行：
+>
+> ```bash
+> pnpm --filter @powlshaw/web reset:admin
+> ```
+>
+> 脚本会按当前 `.env.local` 写入新的 scrypt 哈希、递增 `session_version`（旧会话立即失效）并清空 `user_login_attempts`。
+
 ### 从旧版 SQLite 迁移
 
 ```bash

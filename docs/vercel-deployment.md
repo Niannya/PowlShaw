@@ -40,6 +40,16 @@ turso db shell powlshaw "SELECT COUNT(*) FROM sqlite_master WHERE type='table' A
 # 期望 20
 ```
 
+导入 Turso（不依赖 Turso CLI）：
+
+```bash
+# 在 apps/web 下执行；--reset 会先删除本项目 20 张表再导入
+node --env-file=.env.local scripts/import_turso_dump.mjs   --file ../../build/powlshaw_turso.sql --reset
+
+# 旧库自带管理员哈希，导入后同步为当前 .env.local 的账号
+pnpm --filter @powlshaw/web reset:admin
+```
+
 > `event_documents.file_url` 里保存的旧 `/uploads/...` 相对地址不会自动迁移到 Blob。请把实际文件重新上传到 Vercel Blob，并通过后台“评议资料”重新入库，或写脚本批量更新 `file_url`。
 
 ## 2. 创建 Vercel Blob Store

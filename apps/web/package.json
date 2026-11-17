@@ -13,7 +13,8 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "db:init": "node --env-file-if-exists=.env.local scripts/init_local_db.mjs",
     "db:migrate": "python scripts/migrate_sqlite_to_turso.py",
-    "reset:admin": "node --env-file-if-exists=.env.local scripts/reset_admin.mjs"
+    "reset:admin": "node --env-file-if-exists=.env.local scripts/reset_admin.mjs",
+    "db:import": "node --env-file-if-exists=.env.local scripts/import_turso_dump.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

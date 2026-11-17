@@ -123,6 +123,16 @@ turso db shell powlshaw < build/powlshaw_turso.sql
 5. 重建 `content_revisions` 以支持 `event_extension` 快照；
 6. 创建两张扩展表并导出可直接导入 Turso 的 SQL。
 
+导入 Turso（Windows 没有 Turso CLI 时也可以）：
+
+```bash
+# 在 apps/web 下执行；--reset 会先删除本项目 20 张表再导入，请确认目标库
+node --env-file=.env.local scripts/import_turso_dump.mjs   --file ../../build/powlshaw_turso.sql --reset
+
+# 旧库的管理员密码哈希会被导入，改成当前 .env.local 的账号
+pnpm --filter @powlshaw/web reset:admin
+```
+
 > 旧 `event_documents.file_url` 里指向 `/uploads/...` 的相对地址不会自动上传到 Blob；部署前需要把实际文件重新上传，并更新 `file_url`（页面链接才能继续下载）。
 >
 > Vercel Functions 的请求体上限为 **4.5 MB**，因此超过约 4 MB 的 DOCX 无法经 `/upload/docx-parse` 直接上传（自托管部署不受此限制）。大文件请改用 Markdown 粘贴，或拆分为多个 DOCX 导入。
